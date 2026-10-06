@@ -39,7 +39,7 @@ SCORING_PROMPT = """You are an expert technical recruiter evaluating job fit.
 ## Your Task
 Evaluate how well this candidate matches this job posting. Consider:
 1. Technical stack alignment (languages, frameworks, tools — Golang, C#/.NET, Java/Spring Boot, Python, React, SQL, Docker, Kubernetes, distributed systems)
-2. Experience level match (CRITICAL HARD REQUIREMENT: The candidate started their career in Jan 2025 and currently has {current_yoe:.1f} years of professional experience. Target roles requiring <{max_allowed_yoe} YOE. If the job description requires or expects >={max_allowed_yoe} years of experience, e.g. 2+ YOE, 3+ YOE, mid-level, or senior, you MUST strictly reject this role by giving a match_score below 50. Roles with 0-1 YOE, new grad, junior, or early-career match the candidate's level.)
+2. Experience level match (CRITICAL HARD REQUIREMENT: The candidate started their career in Jan 2025 and has only {current_yoe:.1f} years of professional experience. Target roles requiring strictly <{max_allowed_yoe} YOE. If the job description requires or expects >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring >={max_allowed_yoe} YOE score 70 or above. Only roles open to 0-1 YOE, fresh graduates, junior, associate, or early-career engineers should pass.)
 3. Compensation & Company tier (Target: Tier-1 engineering compensation >18 LPA INR or equivalent $25k+ USD. If compensation is listed in JD and indicates entry support or low pay, penalize the score)
 4. Domain relevance (fintech, backend systems, distributed systems, high-scale web platforms)
 
@@ -184,6 +184,21 @@ class JobScorer:
 
             # Ensure score is an integer
             result["match_score"] = int(result["match_score"])
+
+            # Programmatic safety valve: if JD mentions >= max_allowed_yoe, clamp score below threshold
+            if result["match_score"] >= self.min_score:
+                from src.pipeline.filters import PreFilter
+                yoe_mentioned = PreFilter(config={})._extract_yoe(description)
+                if yoe_mentioned is not None and yoe_mentioned >= self.max_allowed_yoe:
+                    logger.warning(
+                        f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                        f"JD mentions {yoe_mentioned}+ YOE (hard limit <{self.max_allowed_yoe} YOE)."
+                    )
+                    result["match_score"] = 30
+                    result["summary"] = (
+                        f"Automatically rejected: JD requires {yoe_mentioned}+ YOE. "
+                        f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
+                    )
 
             logger.info(
                 f"[Scorer] {company} — {title}: score={result['match_score']}"

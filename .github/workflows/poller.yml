@@ -2,8 +2,8 @@ name: JobHunter Automated Poller
 
 on:
   schedule:
-    # Run every 4 hours automatically (24/7 in the cloud)
-    - cron: '0 */4 * * *'
+    # Run once daily at 9:30 AM IST (4:00 AM UTC)
+    - cron: '0 4 * * *'
   workflow_dispatch: # Allows manual trigger with one click from GitHub Actions UI
 
 permissions:
@@ -43,9 +43,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/jobhunter.db
-          key: jobhunter-v3-db-${{ github.run_id }}
+          key: jobhunter-v4-db-${{ github.run_id }}
           restore-keys: |
-            jobhunter-v3-db-
+            jobhunter-v4-db-
 
       - name: Ensure Directories Exist
         run: |
@@ -64,7 +64,7 @@ jobs:
         if: always()
         with:
           path: data/jobhunter.db
-          key: jobhunter-v3-db-${{ github.run_id }}
+          key: jobhunter-v4-db-${{ github.run_id }}
 
       - name: Upload Resumes & Database Artifacts
         uses: actions/upload-artifact@v4

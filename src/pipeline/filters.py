@@ -118,15 +118,22 @@ class PreFilter:
     def _extract_yoe(self, description: str) -> Optional[int]:
         """
         Extract minimum years of experience from job description.
-        Looks for patterns like: "2+ years", "3-5 years", "minimum 2 years"
-        Returns the minimum number found, or None if no pattern found.
+        Covers phrasing like: "2+ years developing", "3+ years building",
+        "minimum 2 years", "2-4 years", "3+ yrs in Go", "must have 2+ years".
         """
         patterns = [
-            r"(?:require[sd]?|minimum|at least|preferred|must have|looking for|with|plus)[:\s]*(\d+)\+?\s*(?:years?|yrs?)",
-            r"(\d+)\+?\s*(?:years?|yrs?)\s*(?:of)?\s*(?:full[-\s]time)?\s*(?:relevant|software|professional|industry|engineering|working|hands-on)?\s*(?:experience|exp)",
-            r"(\d+)\s*(?:-|to)\s*\d+\s*(?:years?|yrs?)\s*(?:of)?\s*(?:full[-\s]time)?\s*(?:relevant|software|professional|industry|engineering|working|hands-on)?\s*(?:experience|exp)",
-            r"minimum\s*(?:of\s*)?(\d+)\s*(?:years?|yrs?)",
-            r"at\s*least\s*(\d+)\s*(?:years?|yrs?)",
+            # Explicit requirements markers: 'requires 3+ years', 'minimum 2 years', 'must have 3 years'
+            r"(?:require[sd]?|minimum|at least|must have|looking for)[:\s]+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
+            # X+ years of / X+ years building / developing / writing / software / engineering / backend / full-stack
+            r"(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp|working|building|developing|writing|coding|software|engineering|backend|frontend|fullstack|full-stack|systems|industry|professional|production|relevant)",
+            # X+ years with / in a technology: '2+ years with Python', '3+ years in Go'
+            r"(\d+)\+?\s*(?:years?|yrs?)\s+(?:in|with)\s+[A-Za-z#+.]+",
+            # X-Y years or X to Y years: '2-4 years', '3 to 5 years', '3-5 yrs'
+            r"(\d+)\s*(?:-|to)\s*\d+\s*(?:years?|yrs?)",
+            # X+ years or X+ yrs standalone (e.g. '2+ years', '3+ yrs')
+            r"(\d+)\+\s*(?:years?|yrs?)",
+            # 'minimum of X years', 'at least X years'
+            r"(?:minimum|at least)\s+(?:of\s+)?(\d+)\s*(?:years?|yrs?)",
         ]
 
         min_yoe = None

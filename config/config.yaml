@@ -4,7 +4,7 @@
 
 # Polling schedule
 scheduler:
-  poll_interval_minutes: 240
+  poll_interval_minutes: 1440  # Once a day (24 hours)
   # Stagger requests to avoid burst traffic
   request_delay_seconds: 2
 
@@ -41,6 +41,21 @@ filters:
     - "vp"
     - "head of"
     - "architect"
+    - "sde ii"
+    - "sde 2"
+    - "sde-ii"
+    - "sde-2"
+    - "swe ii"
+    - "swe 2"
+    - "swe-ii"
+    - "swe-2"
+    - "engineer ii"
+    - "engineer 2"
+    - "developer ii"
+    - "developer 2"
+    - "mid-level"
+    - "mid level"
+    - "experienced"
     - "mobile"
     - "ios"
     - "android"
