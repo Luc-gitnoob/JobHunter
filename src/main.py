@@ -241,6 +241,10 @@ async def run_poll_cycle(all_config: dict):
     # --- Phase 4: LLM Scoring ---
     scored_jobs = []
     for raw_job, db_job in new_jobs:
+        if getattr(scorer, "quota_exhausted", False):
+            logger.warning("  [LLM] Daily quota reached. Skipping remaining unscored jobs until next cycle.")
+            break
+
         try:
             score_result = await scorer.score_job(
                 company=raw_job.company_name,
@@ -249,6 +253,10 @@ async def run_poll_cycle(all_config: dict):
                 department=raw_job.department or "",
                 description=raw_job.description or "",
             )
+
+            if getattr(scorer, "quota_exhausted", False):
+                logger.warning("  [LLM] Daily quota reached during scoring. Halting scoring phase.")
+                break
 
             if score_result:
                 async with AsyncSessionLocal() as session:

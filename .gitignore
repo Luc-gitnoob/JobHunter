@@ -37,3 +37,6 @@ Thumbs.db
 *.out
 *.toc
 *.synctex.gz
+
+# Local run logs
+latest-run.txt

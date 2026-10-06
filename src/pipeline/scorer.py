@@ -107,6 +107,7 @@ class JobScorer:
         self._profile = _load_profile()
         self._profile_text = _format_profile(self._profile)
         self._model = None
+        self.quota_exhausted = False
 
     def _get_model(self):
         """Lazy-initialize the Gemini model."""
@@ -139,6 +140,9 @@ class JobScorer:
                            resume_emphasis, summary, recommended_keywords
             or None if scoring fails
         """
+        if self.quota_exhausted:
+            return None
+
         prompt = SCORING_PROMPT.format(
             profile_text=self._profile_text,
             company=company,
@@ -184,5 +188,13 @@ class JobScorer:
             logger.error(f"[Scorer] Failed to parse LLM response as JSON: {e}")
             return None
         except Exception as e:
-            logger.error(f"[Scorer] Error scoring {company}/{title}: {e}")
+            err_msg = str(e)
+            if "429" in err_msg or "quota" in err_msg.lower() or "ResourceExhausted" in err_msg:
+                self.quota_exhausted = True
+                logger.error(
+                    f"[Scorer] Quota exceeded for model '{self.model_name}': {e}. "
+                    f"Halting scoring to prevent redundant API calls."
+                )
+            else:
+                logger.error(f"[Scorer] Error scoring {company}/{title}: {e}")
             return None

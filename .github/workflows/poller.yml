@@ -2,8 +2,8 @@ name: JobHunter Automated Poller
 
 on:
   schedule:
-    # Run every 45 minutes automatically (24/7 in the cloud)
-    - cron: '*/45 * * * *'
+    # Run every 4 hours automatically (24/7 in the cloud)
+    - cron: '0 */4 * * *'
   workflow_dispatch: # Allows manual trigger with one click from GitHub Actions UI
 
 permissions:
@@ -23,6 +23,14 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
+
+      - name: Cache APT packages (LaTeX)
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-texlive
+          restore-keys: |
+            ${{ runner.os }}-apt-
 
       - name: Install System Dependencies & LaTeX (for PDF resumes)
         run: |

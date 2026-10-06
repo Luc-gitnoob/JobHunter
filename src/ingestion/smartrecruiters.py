@@ -120,27 +120,33 @@ class SmartRecruitersSource(JobSource):
         description = ""
         apply_url = f"https://jobs.smartrecruiters.com/{slug}/{job_id}"
 
-        try:
-            detail_url = f"https://api.smartrecruiters.com/v1/companies/{slug}/postings/{job_id}"
-            resp = await client.get(detail_url, timeout=15.0)
-            if resp.status_code == 200:
-                detail_data = resp.json()
-                apply_url = detail_data.get("applyUrl") or detail_data.get("postingUrl") or apply_url
+        # Optimization: only make detail API requests for titles that have software/tech indicators
+        title_lower = title.lower()
+        tech_keywords = ("software", "developer", "engineer", "backend", "platform", "systems", "sde", "data", "cloud", "tech")
+        is_candidate_job = any(k in title_lower for k in tech_keywords)
 
-                sections = detail_data.get("jobAd", {}).get("sections", {})
-                desc_parts = []
-                for sec_key in ["jobDescription", "qualifications", "additionalInformation"]:
-                    sec = sections.get(sec_key, {})
-                    sec_title = sec.get("title", "")
-                    sec_text = sec.get("text", "")
-                    if sec_text:
-                        if sec_title:
-                            desc_parts.append(f"### {sec_title}\n{sec_text}")
-                        else:
-                            desc_parts.append(sec_text)
-                description = "\n\n".join(desc_parts)
-        except Exception as e:
-            logger.debug(f"[SmartRecruiters] Could not fetch details for {job_id}: {e}")
+        if is_candidate_job:
+            try:
+                detail_url = f"https://api.smartrecruiters.com/v1/companies/{slug}/postings/{job_id}"
+                resp = await client.get(detail_url, timeout=15.0)
+                if resp.status_code == 200:
+                    detail_data = resp.json()
+                    apply_url = detail_data.get("applyUrl") or detail_data.get("postingUrl") or apply_url
+
+                    sections = detail_data.get("jobAd", {}).get("sections", {})
+                    desc_parts = []
+                    for sec_key in ["jobDescription", "qualifications", "additionalInformation"]:
+                        sec = sections.get(sec_key, {})
+                        sec_title = sec.get("title", "")
+                        sec_text = sec.get("text", "")
+                        if sec_text:
+                            if sec_title:
+                                desc_parts.append(f"### {sec_title}\n{sec_text}")
+                            else:
+                                desc_parts.append(sec_text)
+                    description = "\n\n".join(desc_parts)
+            except Exception as e:
+                logger.debug(f"[SmartRecruiters] Could not fetch details for {job_id}: {e}")
 
         return RawJob(
             external_id=job_id,
