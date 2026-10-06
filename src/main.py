@@ -275,9 +275,74 @@ async def run_poll_cycle(all_config: dict):
                 if score_result["match_score"] >= min_score:
                     scored_jobs.append((raw_job, db_job, score_result))
                     logger.info(
-                        f"  ⭐ HIGH MATCH: {raw_job.company_name} — {raw_job.title} "
-                        f"(score: {score_result['match_score']})"
+                        f"  ⭐ HIGH MATCH ({score_result['match_score']}/100): "
+                        f"{raw_job.company_name} — {raw_job.title}. Dispatching notification..."
                     )
+
+                    # Immediately generate tailored resume and notify via Telegram
+                    try:
+                        tailored = await tailor.tailor(
+                            company=raw_job.company_name,
+                            title=raw_job.title,
+                            description=raw_job.description or "",
+                            match_analysis=score_result,
+                        )
+
+                        resume_path = None
+                        if tailored:
+                            context = tailor.build_template_context(tailored)
+                            try:
+                                safe_name = f"{raw_job.company_name}_{raw_job.title}_{db_job.id}"
+                                resume_path = compiler.compile(context, safe_name)
+                            except Exception as e:
+                                logger.warning(f"  Resume compilation failed: {e}")
+
+                        referral_msg = generate_referral_message(
+                            candidate_name=profile["name"],
+                            company=raw_job.company_name,
+                            title=raw_job.title,
+                            apply_url=raw_job.apply_url,
+                            matching_skills=score_result.get("matching_skills", []),
+                        )
+
+                        sent = await notifier.send_job_alert(
+                            company=raw_job.company_name,
+                            title=raw_job.title,
+                            location=raw_job.location or "",
+                            apply_url=raw_job.apply_url,
+                            match_score=score_result["match_score"],
+                            match_summary=score_result.get("summary", ""),
+                            matching_skills=score_result.get("matching_skills", []),
+                            referral_message=referral_msg,
+                            resume_path=resume_path,
+                        )
+
+                        async with AsyncSessionLocal() as session:
+                            from sqlalchemy import update
+                            update_values = {
+                                "referral_message": referral_msg,
+                                "status": "notified" if sent else ("resume_generated" if resume_path else "scored"),
+                            }
+                            if resume_path:
+                                update_values["resume_path"] = str(resume_path)
+                                update_values["resume_generated_at"] = datetime.now(timezone.utc)
+                            if sent:
+                                update_values["notified"] = True
+                                update_values["notified_at"] = datetime.now(timezone.utc)
+
+                            await session.execute(
+                                update(Job).where(Job.id == db_job.id).values(**update_values)
+                            )
+                            await session.commit()
+
+                        if sent:
+                            logger.info(f"  📬 Telegram alert delivered for {raw_job.company_name} — {raw_job.title}")
+
+                    except Exception as e:
+                        logger.error(
+                            f"  Resume/notification error for "
+                            f"{raw_job.company_name}/{raw_job.title}: {e}"
+                        )
 
         except Exception as e:
             logger.error(f"  Scoring error for {raw_job.company_name}/{raw_job.title}: {e}")
@@ -285,85 +350,7 @@ async def run_poll_cycle(all_config: dict):
         # Rate limit Gemini calls (safe for Free Tier RPM)
         await asyncio.sleep(4)
 
-    logger.info(f"High-match jobs (≥{min_score}): {len(scored_jobs)}")
-
-    # --- Phase 5: Resume Generation + Notification ---
-    for raw_job, db_job, score_result in scored_jobs:
-        try:
-            # Generate tailored resume
-            tailored = await tailor.tailor(
-                company=raw_job.company_name,
-                title=raw_job.title,
-                description=raw_job.description or "",
-                match_analysis=score_result,
-            )
-
-            resume_path = None
-            if tailored:
-                context = tailor.build_template_context(tailored)
-                try:
-                    safe_name = f"{raw_job.company_name}_{raw_job.title}_{db_job.id}"
-                    resume_path = compiler.compile(context, safe_name)
-                except Exception as e:
-                    logger.warning(f"  Resume generation failed: {e}")
-
-            # Generate referral message
-            referral_msg = generate_referral_message(
-                candidate_name=profile["name"],
-                company=raw_job.company_name,
-                title=raw_job.title,
-                apply_url=raw_job.apply_url,
-                matching_skills=score_result.get("matching_skills", []),
-            )
-
-            # Update DB
-            async with AsyncSessionLocal() as session:
-                from sqlalchemy import update
-                update_values = {
-                    "referral_message": referral_msg,
-                    "status": "resume_generated" if resume_path else "scored",
-                }
-                if resume_path:
-                    update_values["resume_path"] = str(resume_path)
-                    update_values["resume_generated_at"] = datetime.now(timezone.utc)
-
-                await session.execute(
-                    update(Job).where(Job.id == db_job.id).values(**update_values)
-                )
-                await session.commit()
-
-            # Send Telegram notification
-            sent = await notifier.send_job_alert(
-                company=raw_job.company_name,
-                title=raw_job.title,
-                location=raw_job.location or "",
-                apply_url=raw_job.apply_url,
-                match_score=score_result["match_score"],
-                match_summary=score_result.get("summary", ""),
-                matching_skills=score_result.get("matching_skills", []),
-                referral_message=referral_msg,
-                resume_path=resume_path,
-            )
-
-            if sent:
-                async with AsyncSessionLocal() as session:
-                    from sqlalchemy import update
-                    await session.execute(
-                        update(Job)
-                        .where(Job.id == db_job.id)
-                        .values(
-                            notified=True,
-                            notified_at=datetime.now(timezone.utc),
-                            status="notified",
-                        )
-                    )
-                    await session.commit()
-
-        except Exception as e:
-            logger.error(
-                f"  Resume/notification error for "
-                f"{raw_job.company_name}/{raw_job.title}: {e}"
-            )
+    logger.info(f"Cycle completed. High-match jobs dispatched: {len(scored_jobs)}")
 
     logger.info("=" * 60)
     logger.info("Poll cycle complete!")
