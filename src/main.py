@@ -177,7 +177,7 @@ async def run_poll_cycle(all_config: dict):
     companies_config = all_config["companies"]
     profile = all_config["profile"]
 
-    pre_filter = PreFilter(config.get("filters", {}))
+    pre_filter = PreFilter(config.get("filters", {}), profile=profile)
     scorer = JobScorer(config.get("scoring", {}))
     tailor = ResumeTailor(config.get("scoring", {}))
     compiler = ResumeCompiler(config.get("resume", {}))
@@ -342,6 +342,22 @@ async def run_poll_cycle(all_config: dict):
             f"Dispatching Telegram alerts..."
         )
         for db_job in unnotified_jobs:
+            passes, reason = pre_filter.apply(db_job)
+            if not passes:
+                logger.info(
+                    f"  Filtering out previously discovered job {db_job.company_name} — "
+                    f"{db_job.title}: {reason}"
+                )
+                async with AsyncSessionLocal() as session:
+                    from sqlalchemy import update
+                    await session.execute(
+                        update(Job)
+                        .where(Job.id == db_job.id)
+                        .values(is_filtered_out=True, filter_reason=reason, status="filtered")
+                    )
+                    await session.commit()
+                continue
+
             score_data = {}
             if db_job.match_analysis:
                 try:

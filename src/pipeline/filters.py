@@ -6,6 +6,7 @@ LLM call. The goal: eliminate noise so we only score high-potential jobs.
 
 import re
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 from src.ingestion.base import RawJob
@@ -13,16 +14,48 @@ from src.ingestion.base import RawJob
 logger = logging.getLogger(__name__)
 
 
+def calculate_yoe(start_date_str: str = "2025-01", as_of: Optional[datetime] = None) -> float:
+    """
+    Calculate candidate's exact years of professional experience
+    from career start date (e.g. '2025-01') to as_of (default: current UTC date).
+    """
+    try:
+        parts = [int(p) for p in start_date_str.split("-")]
+        start_year = parts[0]
+        start_month = parts[1] if len(parts) > 1 else 1
+    except Exception:
+        start_year, start_month = 2025, 1
+
+    now = as_of or datetime.now(timezone.utc)
+    months = (now.year - start_year) * 12 + (now.month - start_month)
+    return max(0.0, months / 12.0)
+
+
+def get_max_allowed_yoe(start_date_str: str = "2025-01", as_of: Optional[datetime] = None) -> int:
+    """
+    Compute the strict upper bound for YOE (< N years requirement).
+    Rule:
+    - Started Jan 2025:
+      - Throughout 2025 (0 to <1 YOE): strict limit is <1 YOE (max_allowed = 1)
+      - Throughout 2026 (1 to <2 YOE): strict limit is <2 YOE (max_allowed = 2)
+      - Throughout 2027 (2 to <3 YOE): strict limit is <3 YOE (max_allowed = 3)
+      - Dynamically updates each year without manual code changes.
+    """
+    yoe = calculate_yoe(start_date_str, as_of)
+    return int(yoe) + 1
+
+
 class PreFilter:
     """
     Rule-based pre-filter for job postings.
-    Configured via config.yaml filter rules.
+    Configured via config.yaml filter rules and profile.yaml career start date.
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, profile: dict = None):
         """
         Args:
             config: The 'filters' section from config.yaml
+            profile: The candidate profile dict from profile.yaml
         """
         self.title_include = [
             t.lower() for t in config.get("title_include", [])
@@ -30,7 +63,21 @@ class PreFilter:
         self.title_exclude = [
             t.lower() for t in config.get("title_exclude", [])
         ]
-        self.max_yoe = config.get("max_yoe_mentioned", 3)
+
+        # Calculate dynamic YOE from candidate's career start date (Jan 2025)
+        career_start = (profile or {}).get("career_start_date", "2025-01")
+        self.candidate_yoe = calculate_yoe(career_start)
+        self.max_yoe = get_max_allowed_yoe(career_start)
+
+        # Allow explicit numeric override from config if provided
+        configured_max = config.get("max_yoe_mentioned")
+        if isinstance(configured_max, int) and configured_max > 0:
+            self.max_yoe = configured_max
+
+        logger.info(
+            f"[PreFilter] Dynamic candidate experience: {self.candidate_yoe:.2f} yrs "
+            f"(started {career_start}). Hard YOE upper bound: <{self.max_yoe} YOE."
+        )
 
     def apply(self, job: RawJob, geo_filter: list[str] = None) -> tuple[bool, Optional[str]]:
         """
@@ -60,23 +107,24 @@ class PreFilter:
                 if "remote" not in location_lower:
                     return False, f"Location '{job.location}' not in geo filter: {geo_filter}"
 
-        # 4. YOE check — look for "X+ years" patterns in description
+        # 4. YOE check — strict hard requirement (< max_yoe)
         if self.max_yoe and job.description:
             yoe_mentioned = self._extract_yoe(job.description)
-            if yoe_mentioned is not None and yoe_mentioned > self.max_yoe:
-                return False, f"JD mentions {yoe_mentioned}+ YOE (max: {self.max_yoe})"
+            if yoe_mentioned is not None and yoe_mentioned >= self.max_yoe:
+                return False, f"JD requires {yoe_mentioned}+ YOE (hard limit: <{self.max_yoe} YOE)"
 
         return True, None
 
     def _extract_yoe(self, description: str) -> Optional[int]:
         """
         Extract minimum years of experience from job description.
-        Looks for patterns like: "3+ years", "5-7 years experience"
+        Looks for patterns like: "2+ years", "3-5 years", "minimum 2 years"
         Returns the minimum number found, or None if no pattern found.
         """
         patterns = [
-            r"(\d+)\+?\s*(?:years?|yrs?)\s*(?:of)?\s*(?:experience|exp)",
-            r"(\d+)\s*-\s*\d+\s*(?:years?|yrs?)\s*(?:of)?\s*(?:experience|exp)",
+            r"(?:require[sd]?|minimum|at least|preferred|must have|looking for|with|plus)[:\s]*(\d+)\+?\s*(?:years?|yrs?)",
+            r"(\d+)\+?\s*(?:years?|yrs?)\s*(?:of)?\s*(?:full[-\s]time)?\s*(?:relevant|software|professional|industry|engineering|working|hands-on)?\s*(?:experience|exp)",
+            r"(\d+)\s*(?:-|to)\s*\d+\s*(?:years?|yrs?)\s*(?:of)?\s*(?:full[-\s]time)?\s*(?:relevant|software|professional|industry|engineering|working|hands-on)?\s*(?:experience|exp)",
             r"minimum\s*(?:of\s*)?(\d+)\s*(?:years?|yrs?)",
             r"at\s*least\s*(\d+)\s*(?:years?|yrs?)",
         ]

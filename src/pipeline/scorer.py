@@ -39,7 +39,7 @@ SCORING_PROMPT = """You are an expert technical recruiter evaluating job fit.
 ## Your Task
 Evaluate how well this candidate matches this job posting. Consider:
 1. Technical stack alignment (languages, frameworks, tools — Golang, C#/.NET, Java/Spring Boot, Python, React, SQL, Docker, Kubernetes, distributed systems)
-2. Experience level match (Target: early-career / SDE-1 / 0-2 YOE. The candidate has ~1 year of professional experience; strictly penalize roles requiring >2 YOE)
+2. Experience level match (CRITICAL HARD REQUIREMENT: The candidate started their career in Jan 2025 and currently has {current_yoe:.1f} years of professional experience. Target roles requiring <{max_allowed_yoe} YOE. If the job description requires or expects >={max_allowed_yoe} years of experience, e.g. 2+ YOE, 3+ YOE, mid-level, or senior, you MUST strictly reject this role by giving a match_score below 50. Roles with 0-1 YOE, new grad, junior, or early-career match the candidate's level.)
 3. Compensation & Company tier (Target: Tier-1 engineering compensation >18 LPA INR or equivalent $25k+ USD. If compensation is listed in JD and indicates entry support or low pay, penalize the score)
 4. Domain relevance (fintech, backend systems, distributed systems, high-scale web platforms)
 
@@ -106,6 +106,10 @@ class JobScorer:
         self.min_score = config.get("min_score", 70)
         self._profile = _load_profile()
         self._profile_text = _format_profile(self._profile)
+        career_start = self._profile.get("career_start_date", "2025-01")
+        from src.pipeline.filters import calculate_yoe, get_max_allowed_yoe
+        self.candidate_yoe = calculate_yoe(career_start)
+        self.max_allowed_yoe = get_max_allowed_yoe(career_start)
         self._model = None
         self.quota_exhausted = False
 
@@ -150,6 +154,8 @@ class JobScorer:
             location=location or "Not specified",
             department=department or "Not specified",
             description=description[:4000],  # Truncate very long JDs
+            current_yoe=self.candidate_yoe,
+            max_allowed_yoe=self.max_allowed_yoe,
         )
 
         try:

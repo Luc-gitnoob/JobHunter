@@ -29,8 +29,10 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             texlive-latex-base \
+            texlive-latex-recommended \
             texlive-latex-extra \
-            texlive-fonts-recommended
+            texlive-fonts-recommended \
+            lmodern
 
       - name: Install Python Dependencies
         run: |
@@ -41,9 +43,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/jobhunter.db
-          key: jobhunter-v2-db-${{ github.run_id }}
+          key: jobhunter-v3-db-${{ github.run_id }}
           restore-keys: |
-            jobhunter-v2-db-
+            jobhunter-v3-db-
 
       - name: Ensure Directories Exist
         run: |
@@ -62,7 +64,7 @@ jobs:
         if: always()
         with:
           path: data/jobhunter.db
-          key: jobhunter-v2-db-${{ github.run_id }}
+          key: jobhunter-v3-db-${{ github.run_id }}
 
       - name: Upload Resumes & Database Artifacts
         uses: actions/upload-artifact@v4

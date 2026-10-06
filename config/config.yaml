@@ -79,8 +79,8 @@ filters:
     - "working student"
     - "apprentice"
 
-  # Minimum years of experience mentioned in JD (0 = accept all)
-  max_yoe_mentioned: 2
+  # Maximum allowed YOE upper bound: 'auto' dynamically calculates from career_start_date in profile.yaml (<2 YOE in 2026, <3 YOE in 2027)
+  max_yoe_mentioned: auto
 
 # LLM Scoring
 scoring:

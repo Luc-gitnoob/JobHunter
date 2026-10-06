@@ -11,6 +11,7 @@ phone: "+91-9082854061"
 linkedin: "" # Add your LinkedIn URL
 github: ""   # Add your GitHub URL
 portfolio: "" # Add your portfolio URL if any
+career_start_date: "2025-01" # Full-time software engineering career start (Jan 2025)
 
 education:
   - institution: IIIT Kota

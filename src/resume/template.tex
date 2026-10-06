@@ -8,7 +8,7 @@
 % --- Packages ---
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
 \usepackage[margin=0.55in]{geometry}
 \usepackage{enumitem}
 \usepackage{hyperref}
