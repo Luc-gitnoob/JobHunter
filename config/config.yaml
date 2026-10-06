@@ -23,22 +23,12 @@ filters:
     - "full stack"
     - "fullstack"
     - "full-stack"
-    - "platform engineer"
-    - "infrastructure engineer"
-    - "systems engineer"
-    - "systems developer"
-    - "member of technical staff"
-    - "mts"
     - "golang"
     - "go developer"
     - "c# developer"
     - ".net developer"
     - "java developer"
-    - "python developer"
-    - "cloud engineer"
     - "associate engineer"
-    - "graduate engineer"
-    - "early career"
 
   # Jobs with these in the title are immediately dropped
   title_exclude:
