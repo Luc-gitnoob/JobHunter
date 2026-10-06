@@ -24,14 +24,6 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Cache APT packages (LaTeX)
-        uses: actions/cache@v4
-        with:
-          path: /var/cache/apt/archives
-          key: ${{ runner.os }}-apt-texlive
-          restore-keys: |
-            ${{ runner.os }}-apt-
-
       - name: Install System Dependencies & LaTeX (for PDF resumes)
         run: |
           sudo apt-get update -qq
@@ -49,9 +41,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/jobhunter.db
-          key: jobhunter-db-${{ github.run_id }}
+          key: jobhunter-v2-db-${{ github.run_id }}
           restore-keys: |
-            jobhunter-db-
+            jobhunter-v2-db-
 
       - name: Ensure Directories Exist
         run: |
@@ -70,7 +62,7 @@ jobs:
         if: always()
         with:
           path: data/jobhunter.db
-          key: jobhunter-db-${{ github.run_id }}
+          key: jobhunter-v2-db-${{ github.run_id }}
 
       - name: Upload Resumes & Database Artifacts
         uses: actions/upload-artifact@v4

@@ -38,10 +38,10 @@ SCORING_PROMPT = """You are an expert technical recruiter evaluating job fit.
 
 ## Your Task
 Evaluate how well this candidate matches this job posting. Consider:
-1. Technical stack alignment (languages, frameworks, tools)
-2. Experience level match (this candidate has ~1 year of professional experience)
-3. Domain relevance (fintech, backend systems, distributed systems)
-4. Role seniority alignment (target: SDE-1 / SDE-2 / 0-3 YOE)
+1. Technical stack alignment (languages, frameworks, tools — Golang, C#/.NET, Java/Spring Boot, Python, React, SQL, Docker, Kubernetes, distributed systems)
+2. Experience level match (Target: early-career / SDE-1 / 0-2 YOE. The candidate has ~1 year of professional experience; strictly penalize roles requiring >2 YOE)
+3. Compensation & Company tier (Target: Tier-1 engineering compensation >18 LPA INR or equivalent $25k+ USD. If compensation is listed in JD and indicates entry support or low pay, penalize the score)
+4. Domain relevance (fintech, backend systems, distributed systems, high-scale web platforms)
 
 Respond with ONLY a valid JSON object (no markdown, no code blocks):
 {{
@@ -49,7 +49,7 @@ Respond with ONLY a valid JSON object (no markdown, no code blocks):
     "matching_skills": [<list of skills from candidate that match the JD>],
     "skill_gaps": [<list of required skills the candidate lacks>],
     "resume_emphasis": [<list of candidate accomplishments to highlight for THIS specific role>],
-    "summary": "<2-3 sentence analysis of why this is or isn't a good fit>",
+    "summary": "<2-3 sentence analysis of why this is or isn't a good fit, including YOE and compensation/tier assessment>",
     "recommended_keywords": [<keywords from the JD to incorporate into resume>]
 }}
 """

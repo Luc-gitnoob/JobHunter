@@ -12,24 +12,33 @@ scheduler:
 filters:
   # Job titles must contain at least one of these (case-insensitive)
   title_include:
+    - "software engineer"
+    - "software developer"
+    - "software development engineer"
+    - "sde"
+    - "swe"
     - "backend"
     - "back-end"
     - "back end"
-    - "distributed systems"
+    - "full stack"
+    - "fullstack"
+    - "full-stack"
     - "platform engineer"
     - "infrastructure engineer"
     - "systems engineer"
     - "systems developer"
+    - "member of technical staff"
+    - "mts"
     - "golang"
     - "go developer"
     - "c# developer"
     - ".net developer"
     - "java developer"
-    - "software development engineer"
-    - "sde"
-    - "swe"
-    - "software engineer"
-    - "software developer"
+    - "python developer"
+    - "cloud engineer"
+    - "associate engineer"
+    - "graduate engineer"
+    - "early career"
 
   # Jobs with these in the title are immediately dropped
   title_exclude:
@@ -42,20 +51,16 @@ filters:
     - "vp"
     - "head of"
     - "architect"
-    - "front end"
-    - "frontend"
-    - "front-end"
-    - "ui"
-    - "ux"
-    - "full stack"
-    - "fullstack"
-    - "full-stack"
     - "mobile"
     - "ios"
     - "android"
+    - "designer"
+    - "ui/ux"
     - "marketing"
     - "sales"
     - "growth"
+    - "account executive"
+    - "business development"
     - "product manager"
     - "project manager"
     - "program manager"
@@ -65,14 +70,14 @@ filters:
     - "devops"
     - "sre"
     - "qa"
-    - "test"
+    - "test engineer"
     - "intern"
     - "co-op"
     - "working student"
     - "apprentice"
 
   # Minimum years of experience mentioned in JD (0 = accept all)
-  max_yoe_mentioned: 3
+  max_yoe_mentioned: 2
 
 # LLM Scoring
 scoring:
