@@ -115,27 +115,20 @@ class TelegramNotifier:
                     )
                     text_response.raise_for_status()
 
-                # Send the resume (PDF or LaTeX source) if available
-                if resume_path and resume_path.exists():
-                    is_pdf = resume_path.suffix.lower() == ".pdf"
-                    mime_type = "application/pdf" if is_pdf else "text/plain"
-                    caption = (
-                        f"📄 Tailored resume for {company} — {title}"
-                        if is_pdf
-                        else f"📄 Tailored LaTeX resume for {company} — {title}"
-                    )
+                # Only send resume attachment if it has been compiled to a ready-to-share PDF
+                if resume_path and resume_path.exists() and resume_path.suffix.lower() == ".pdf":
                     with open(resume_path, "rb") as doc_file:
                         doc_response = await client.post(
                             f"{TELEGRAM_API.format(token=self.token)}/sendDocument",
                             data={
                                 "chat_id": self.chat_id,
-                                "caption": caption,
+                                "caption": f"📄 Tailored resume for {company} — {title}",
                             },
                             files={
                                 "document": (
                                     resume_path.name,
                                     doc_file,
-                                    mime_type,
+                                    "application/pdf",
                                 ),
                             },
                         )
@@ -188,13 +181,13 @@ def generate_referral_message(
     message = (
         f"Hi! I'm {candidate_name}, an SDE at NAV Fund Services working on "
         f"backend systems in Go and .NET. I came across the {title} role at "
-        f"{company} and I'm very interested.\n\n"
-        f"My background aligns well — I have hands-on experience with "
-        f"{skills_highlight}, and I've been building high-throughput fintech "
-        f"infrastructure serving 20+ hedge funds.\n\n"
-        f"I'd really appreciate a referral if you're open to it. "
-        f"Here's the posting: {apply_url}\n\n"
-        f"Happy to share my resume or chat more about my experience. "
+        f"{company} and wanted to reach out.\n\n"
+        f"My background aligns closely — I have hands-on experience with "
+        f"{skills_highlight}, building high-throughput microservices and infrastructure "
+        f"serving 20+ hedge funds.\n\n"
+        f"Here is the role link: {apply_url}\n\n"
+        f"Would you be open to passing along a referral for this opening? "
+        f"I've attached my resume, and I'd be happy to chat or provide any details needed.\n\n"
         f"Thanks for considering!"
     )
 
