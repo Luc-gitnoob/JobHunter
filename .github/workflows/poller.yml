@@ -1,0 +1,76 @@
+name: JobHunter Automated Poller
+
+on:
+  schedule:
+    # Run every 45 minutes automatically (24/7 in the cloud)
+    - cron: '*/45 * * * *'
+  workflow_dispatch: # Allows manual trigger with one click from GitHub Actions UI
+
+permissions:
+  contents: read
+
+jobs:
+  poll-and-notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install System Dependencies & LaTeX (for PDF resumes)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-fonts-recommended
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore SQLite Database Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/jobhunter.db
+          key: jobhunter-db-${{ github.run_id }}
+          restore-keys: |
+            jobhunter-db-
+
+      - name: Ensure Directories Exist
+        run: |
+          mkdir -p data output/resumes
+
+      - name: Run JobHunter Poller
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m src.main --poll-once
+
+      - name: Save SQLite Database Cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/jobhunter.db
+          key: jobhunter-db-${{ github.run_id }}
+
+      - name: Upload Resumes & Database Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jobhunter-data-and-resumes
+          path: |
+            data/jobhunter.db
+            data/jobhunter.log
+            output/resumes/
+          retention-days: 14
