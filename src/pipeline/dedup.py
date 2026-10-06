@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,15 +23,19 @@ class DedupEngine:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def is_duplicate(self, job: RawJob) -> bool:
-        """Check if this job already exists in the database."""
+    async def get_existing_job(self, job: RawJob) -> Optional[Job]:
+        """Check if this job already exists in the database and return it."""
         stmt = select(Job).where(
             Job.external_id == job.external_id,
             Job.source == job.source,
             Job.company_name == job.company_name,
         )
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none() is not None
+        return result.scalar_one_or_none()
+
+    async def is_duplicate(self, job: RawJob) -> bool:
+        """Check if this job already exists in the database."""
+        return await self.get_existing_job(job) is not None
 
     async def filter_new(self, jobs: list[RawJob]) -> list[RawJob]:
         """Filter a list of RawJobs, returning only those not yet in the DB."""
