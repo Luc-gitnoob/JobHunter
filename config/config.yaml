@@ -1,0 +1,69 @@
+# ============================================================
+# JobHunter — Main Configuration
+# ============================================================
+
+# Polling schedule
+scheduler:
+  poll_interval_minutes: 15
+  # Stagger requests to avoid burst traffic
+  request_delay_seconds: 2
+
+# Pre-filter rules (applied BEFORE LLM scoring to save API calls)
+filters:
+  # Job titles must contain at least one of these (case-insensitive)
+  title_include:
+    - "software"
+    - "backend"
+    - "engineer"
+    - "developer"
+    - "sde"
+    - "golang"
+    - "go developer"
+    - "java developer"
+    - ".net developer"
+    - "platform engineer"
+    - "infrastructure engineer"
+
+  # Jobs with these in the title are immediately dropped
+  title_exclude:
+    - "senior"
+    - "staff"
+    - "principal"
+    - "lead"
+    - "manager"
+    - "director"
+    - "vp"
+    - "head of"
+    - "architect"  
+    - "frontend"
+    - "ios"
+    - "android"
+    - "mobile"
+    - "data scientist"
+    - "machine learning"
+    - "devops"
+    - "sre"
+    - "qa"
+    - "test"
+    - "intern"
+    - "co-op"
+
+  # Minimum years of experience mentioned in JD (0 = accept all)
+  max_yoe_mentioned: 3
+
+# LLM Scoring
+scoring:
+  min_score: 70              # Only generate resume + notify for scores >= this
+  model: "gemini-3.8-flash"  # Gemini model to use
+  temperature: 0.3           # Low temp for consistent scoring
+
+# Resume generation
+resume:
+  output_dir: "output/resumes"
+  latex_compiler: "pdflatex"  # or xelatex, lualatex
+
+# Telegram notifications
+telegram:
+  # Message format: rich markdown with inline buttons
+  include_referral_pitch: true
+  include_match_analysis: true

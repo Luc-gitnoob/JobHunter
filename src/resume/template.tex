@@ -1,0 +1,140 @@
+% ============================================================
+% ATS-Friendly Resume Template for Salil Vaidya
+% Single-column, clean formatting, machine-readable
+% Variables are injected via Jinja2 templating before compilation
+% ============================================================
+\documentclass[11pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=0.55in]{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{tabularx}
+
+% --- Colors ---
+\definecolor{linkblue}{HTML}{0066CC}
+\definecolor{sectioncolor}{HTML}{1a1a1a}
+\definecolor{rulecolor}{HTML}{cccccc}
+
+% --- Hyperlink Setup ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    pdfauthor={Salil Vaidya},
+    pdftitle={Salil Vaidya - Resume},
+}
+
+% --- Section Formatting ---
+\titleformat{\section}
+  {\large\bfseries\color{sectioncolor}}
+  {}{0em}{}
+  [\vspace{-0.6em}\textcolor{rulecolor}{\rule{\textwidth}{0.4pt}}]
+\titlespacing*{\section}{0pt}{0.8em}{0.4em}
+
+% --- List Formatting ---
+\setlist[itemize]{
+    leftmargin=1.2em,
+    itemsep=0.1em,
+    parsep=0pt,
+    topsep=0.2em,
+}
+
+% --- No page numbers ---
+\pagestyle{empty}
+
+% --- Custom Commands ---
+\newcommand{\resumeHeading}[4]{
+    \textbf{#1} \hfill #2 \\
+    \textit{#3} \hfill \textit{#4}
+    \vspace{0.2em}
+}
+
+\begin{document}
+
+% ===================== HEADER =====================
+\begin{center}
+    {\LARGE\textbf{((( name )))}}\\\vspace{0.3em}
+    ((( email ))) $|$
+    ((( phone )))
+    ((* if linkedin *))
+    $|$ \href{((( linkedin )))}{LinkedIn}
+    ((* endif *))
+    ((* if github *))
+    $|$ \href{((( github )))}{GitHub}
+    ((* endif *))
+    ((* if portfolio *))
+    $|$ \href{((( portfolio )))}{Portfolio}
+    ((* endif *))
+\end{center}
+
+% ===================== EDUCATION =====================
+\section{Education}
+((* for edu in education *))
+\resumeHeading
+    {((( edu.institution )))}
+    {((( edu.duration )))}
+    {((( edu.degree )))}
+    {CGPA: ((( edu.cgpa )))}
+((* endfor *))
+
+% ===================== EXPERIENCE =====================
+\section{Experience}
+((* for exp in experience *))
+\resumeHeading
+    {((( exp.company )))}
+    {((( exp.duration )))}
+    {((( exp.title )))}
+    {((( exp.stack | join(', ') )))}
+\begin{itemize}
+((* for highlight in exp.highlights *))
+    \item ((( highlight )))
+((* endfor *))
+\end{itemize}
+\vspace{0.3em}
+((* endfor *))
+
+% ===================== PROJECTS =====================
+((* if projects *))
+\section{Projects}
+((* for proj in projects *))
+\resumeHeading
+    {((( proj.name )))}
+    {}
+    {((( proj.stack | join(', ') )))}
+    {}
+\begin{itemize}
+((* for highlight in proj.highlights *))
+    \item ((( highlight )))
+((* endfor *))
+\end{itemize}
+\vspace{0.3em}
+((* endfor *))
+((* endif *))
+
+% ===================== SKILLS =====================
+\section{Technical Skills}
+((* if skill_categories *))
+((* for cat in skill_categories *))
+\textbf{((( cat.name ))):} ((( cat.skills | join(', ') ))) \\
+((* endfor *))
+((* else *))
+\textbf{Languages \& Frameworks:} ((( core_skills | join(', ') ))) \\
+((* endif *))
+
+% ===================== ACHIEVEMENTS =====================
+((* if competitive_programming *))
+\section{Achievements}
+\begin{itemize}
+((* for cp in competitive_programming *))
+    \item \textbf{((( cp.platform ))) ((( cp.title )))} --- ((( cp.details )))
+((* endfor *))
+\end{itemize}
+((* endif *))
+
+\end{document}

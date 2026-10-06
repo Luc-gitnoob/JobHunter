@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Poll Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Poll Logs</h2>
+    <p>History of all polling runs — {{ total }} total entries</p>
+</div>
+
+{% if logs %}
+<table class="jobs-table">
+    <thead>
+        <tr>
+            <th>Source</th>
+            <th>Company</th>
+            <th>Started</th>
+            <th>Duration</th>
+            <th>Found</th>
+            <th>New</th>
+            <th>Status</th>
+            <th>Error</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr class="log-row {% if log.status == 'error' %}status-error{% endif %}" style="--row-index: {{ loop.index }}">
+            <td>
+                <span class="status-badge status-scored">{{ log.source }}</span>
+            </td>
+            <td class="job-company">{{ log.company_name or '—' }}</td>
+            <td style="color: var(--text-muted); font-size: 0.85rem">
+                {{ log.started_at.strftime('%b %d, %H:%M:%S') if log.started_at else '—' }}
+            </td>
+            <td style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-secondary)">
+                {% if log.started_at and log.completed_at %}
+                {{ (log.completed_at - log.started_at).total_seconds() | round(1) }}s
+                {% else %}
+                —
+                {% endif %}
+            </td>
+            <td style="font-weight: 600">{{ log.jobs_found }}</td>
+            <td style="font-weight: 600; color: var(--success)">{{ log.new_jobs }}</td>
+            <td>
+                <span class="status-badge {% if log.status == 'success' %}status-applied{% elif log.status == 'error' %}status-rejected{% else %}status-discovered{% endif %}">
+                    {{ log.status }}
+                </span>
+            </td>
+            <td class="log-error">
+                {{ log.error[:100] if log.error else '—' }}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page - 1 }}">← Prev</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+        <span class="current">{{ p }}</span>
+        {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+        <a href="?page={{ p }}">{{ p }}</a>
+        {% elif p == 4 or p == total_pages - 3 %}
+        <span style="color: var(--text-muted)">…</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>No poll logs yet</h3>
+    <p>Logs will appear here after the first polling cycle runs.</p>
+</div>
+{% endif %}
+{% endblock %}

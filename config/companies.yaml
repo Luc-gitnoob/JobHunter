@@ -1,0 +1,168 @@
+# ============================================================
+# Target Company Catalog
+# Add companies you want to monitor here.
+# Each entry needs: name, ats_platform, ats_slug
+#
+# ATS platforms supported: greenhouse, lever, ashby, smartrecruiters
+# The slug is found in the company's careers page URL:
+#   - Greenhouse: boards.greenhouse.io/{slug}
+#   - Lever: jobs.lever.co/{slug}
+#   - Ashby: jobs.ashbyhq.com/{slug}
+#   - SmartRecruiters: jobs.smartrecruiters.com/{slug}
+# ============================================================
+
+companies:
+  # === Tier 1: Top Tech / Quant / AI (Greenhouse) ===
+  - name: Stripe
+    ats_platform: greenhouse
+    ats_slug: stripe
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Coinbase
+    ats_platform: greenhouse
+    ats_slug: coinbase
+    priority: 1
+    geo_filter: ["India", "Remote"]
+
+  - name: Cloudflare
+    ats_platform: greenhouse
+    ats_slug: cloudflare
+    priority: 1
+    geo_filter: ["India", "Remote", "London"]
+
+  - name: Datadog
+    ats_platform: greenhouse
+    ats_slug: datadog
+    priority: 1
+    geo_filter: []
+
+  - name: Figma
+    ats_platform: greenhouse
+    ats_slug: figma
+    priority: 1
+    geo_filter: []
+
+  - name: Discord
+    ats_platform: greenhouse
+    ats_slug: discord
+    priority: 1
+    geo_filter: []
+
+  - name: Anthropic
+    ats_platform: greenhouse
+    ats_slug: anthropic
+    priority: 1
+    geo_filter: []
+
+  - name: Tower Research Capital
+    ats_platform: greenhouse
+    ats_slug: towerresearchcapital
+    priority: 1
+    geo_filter: ["India", "Gurgaon", "Remote"]
+
+  - name: Jane Street
+    ats_platform: greenhouse
+    ats_slug: janestreet
+    priority: 1
+    geo_filter: []
+
+  - name: Rubrik
+    ats_platform: greenhouse
+    ats_slug: rubrik
+    priority: 1
+    geo_filter: ["India", "Bangalore"]
+
+  - name: Reddit
+    ats_platform: greenhouse
+    ats_slug: reddit
+    priority: 2
+    geo_filter: []
+
+  - name: Brex
+    ats_platform: greenhouse
+    ats_slug: brex
+    priority: 2
+    geo_filter: []
+
+  # === Tier 1: Modern Tech & AI (Ashby) ===
+  - name: Notion
+    ats_platform: ashby
+    ats_slug: notion
+    priority: 1
+    geo_filter: []
+
+  - name: Ramp
+    ats_platform: ashby
+    ats_slug: ramp
+    priority: 1
+    geo_filter: []
+
+  - name: Linear
+    ats_platform: ashby
+    ats_slug: linear
+    priority: 1
+    geo_filter: []
+
+  - name: Perplexity
+    ats_platform: ashby
+    ats_slug: perplexity
+    priority: 1
+    geo_filter: []
+
+  - name: OpenAI
+    ats_platform: ashby
+    ats_slug: openai
+    priority: 1
+    geo_filter: []
+
+  # === Tier 2: Crypto & Fintech (Lever) ===
+  - name: Kraken
+    ats_platform: lever
+    ats_slug: kraken
+    priority: 2
+    geo_filter: []
+
+  # === Tier 2: Global Tech & Mobility (SmartRecruiters) ===
+  - name: Bosch Group
+    ats_platform: smartrecruiters
+    ats_slug: BoschGroup
+    priority: 2
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Delivery Hero
+    ats_platform: smartrecruiters
+    ats_slug: deliveryhero
+    priority: 2
+    geo_filter: []
+
+# ============================================================
+# python-jobspy Fallback Searches
+# For companies not on supported ATS platforms, or for
+# broad keyword-based discovery on LinkedIn/Indeed.
+# ============================================================
+jobspy_searches:
+  - search_term: "Backend Engineer"
+    location: "India"
+    sites: ["linkedin", "indeed"]
+    results_wanted: 30
+
+  - search_term: "Software Engineer Golang"
+    location: "India"
+    sites: ["linkedin", "indeed"]
+    results_wanted: 20
+
+  - search_term: "Software Engineer distributed systems"
+    location: "Bangalore"
+    sites: ["linkedin"]
+    results_wanted: 20
+
+  - search_term: "Razorpay Backend Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 10
+
+  - search_term: "Zerodha Software Engineer"
+    location: "Bangalore"
+    sites: ["linkedin"]
+    results_wanted: 10

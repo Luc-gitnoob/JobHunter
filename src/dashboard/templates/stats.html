@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Analytics</h2>
+    <p>Overview of your job hunting pipeline performance</p>
+</div>
+
+<!-- Overall Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.total_jobs }}</div>
+        <div class="stat-label">Total Jobs Tracked</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.high_matches }}</div>
+        <div class="stat-label">High Matches (70+)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.applied }}</div>
+        <div class="stat-label">Applications Sent</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.filtered_out }}</div>
+        <div class="stat-label">Noise Filtered</div>
+    </div>
+</div>
+
+<!-- Companies Breakdown -->
+<div class="detail-card" style="margin-bottom: var(--space-xl)">
+    <h3>🏢 Companies Breakdown</h3>
+    {% if companies %}
+    <table class="jobs-table">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Total Jobs</th>
+                <th>Avg Score</th>
+                <th>High Matches</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in companies %}
+            <tr style="--row-index: {{ loop.index }}">
+                <td class="job-company">{{ company[0] }}</td>
+                <td>{{ company[1] }}</td>
+                <td>
+                    {% if company[2] %}
+                    <span class="score-badge {% if company[2] >= 80 %}score-high{% elif company[2] >= 60 %}score-medium{% else %}score-low{% endif %}">
+                        {{ company[2] | round(1) }}
+                    </span>
+                    {% else %}
+                    <span class="score-badge score-unscored">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="color: var(--success); font-weight: 600">{{ company[3] }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No data yet</h3>
+        <p>Run the poller to start collecting data.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Top Matches -->
+{% if top_jobs %}
+<div class="detail-card">
+    <h3>🔥 Top Matches</h3>
+    <table class="jobs-table">
+        <thead>
+            <tr>
+                <th>Score</th>
+                <th>Company</th>
+                <th>Title</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in top_jobs %}
+            <tr style="--row-index: {{ loop.index }}" onclick="window.location='/job/{{ job.id }}'">
+                <td>
+                    <span class="score-badge score-high">{{ job.match_score }}</span>
+                </td>
+                <td class="job-company">{{ job.company_name }}</td>
+                <td class="job-title">{{ job.title }}</td>
+                <td>
+                    <span class="status-badge status-{{ job.status }}">{{ job.status | replace('_', ' ') }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

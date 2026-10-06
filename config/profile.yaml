@@ -1,0 +1,109 @@
+# ============================================================
+# Candidate Profile — Ground Truth
+# This file is the single source of truth for Salil's background.
+# The LLM scorer and resume tailor read from this file.
+# DO NOT fabricate or embellish — only factual data here.
+# ============================================================
+
+name: Salil Vaidya
+email: salilvaidya003@gmail.com
+phone: "+91-9082854061"
+linkedin: "" # Add your LinkedIn URL
+github: ""   # Add your GitHub URL
+portfolio: "" # Add your portfolio URL if any
+
+education:
+  - institution: IIIT Kota
+    degree: B.Tech in Electronics and Communication Engineering (ECE)
+    duration: "2021 – 2025"
+    cgpa: "8.00"
+
+experience:
+  - company: NAV Fund Services
+    title: Software Development Engineer
+    domain: Fintech
+    duration: "Jan 2025 – Present"
+    stack:
+      - Golang
+      - C#
+      - ".NET 10"
+      - Docker
+      - Kubernetes
+      - SQL Server
+      - React
+      - ELK Stack
+      - Kerberos
+    highlights:
+      - "Modernized legacy .NET Framework 4.6.2 application to microservices architecture serving 20+ hedge funds across 444+ production configurations; improved throughput by 4.5x"
+      - "Built enterprise authentication platform in Golang: Kerberos SSO, TOTP-based MFA, HashiCorp Vault secrets management"
+      - "Kubernetes deployments with multi-stage Docker builds, rolling updates, and enterprise auth integration"
+      - "Distributed tracing & observability with ELK stack; dual-channel alerting (SMTP + Teams) with cache-based rate limiting for Elsa 3 workflow engine"
+      - "Authored 500+ unit and Playwright E2E tests in Azure DevOps CI/CD pipelines"
+      - "Automated user provisioning with Azure AD (Microsoft Graph API) and RBAC approval workflows"
+
+  - company: Gap Inc.
+    title: Software Development Intern
+    domain: Retail / E-commerce
+    duration: "July 2024 – Aug 2024"
+    stack:
+      - Java
+      - Spring Boot
+      - Azure Data Factory
+    highlights:
+      - "Built ETL pipelines with Azure Data Factory for large-scale data processing"
+
+projects:
+  - name: Algorithmic Trading Platform
+    stack:
+      - Django
+      - React
+      - WebSockets
+      - pandas
+      - numpy
+    highlights:
+      - "Multithreaded backtesting engine achieving 69.02% CAGR and 0.85 win rate"
+
+competitive_programming:
+  - platform: Codeforces
+    title: Expert
+    details: "Max Rating: 1862, Global Rank 46 in Round 941"
+  - platform: LeetCode
+    title: Knight
+    details: "Max Rating: 1854, Top 5%, Rank 520, 800+ problems solved across platforms"
+
+# Core skills for keyword matching
+core_skills:
+  - Golang
+  - Go
+  - C#
+  - ".NET"
+  - Java
+  - Spring Boot
+  - Docker
+  - Kubernetes
+  - Microservices
+  - SQL
+  - REST APIs
+  - gRPC
+  - Git
+  - CI/CD
+  - Linux
+  - React
+  - Python
+
+target:
+  levels:
+    - "SDE 1"
+    - "SDE 2"
+    - "Software Engineer"
+    - "Backend Engineer"
+    - "Software Developer"
+  yoe_range: "0-3"
+  focus_areas:
+    - High-throughput backend systems
+    - Distributed systems
+    - Fintech infrastructure
+    - Quant infrastructure
+    - Go ecosystem
+    - ".NET ecosystem"
+    - Java ecosystem

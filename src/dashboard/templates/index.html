@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Job Matches</h2>
+    <p>{{ total }} jobs found — showing page {{ page }} of {{ total_pages }}</p>
+</div>
+
+<!-- Stats Overview -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.total_jobs }}</div>
+        <div class="stat-label">Total Jobs</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.scored_jobs }}</div>
+        <div class="stat-label">Scored</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.high_matches }}</div>
+        <div class="stat-label">High Matches (70+)</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.applied }}</div>
+        <div class="stat-label">Applied</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ stats.filtered_out }}</div>
+        <div class="stat-label">Filtered Out</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<form class="filter-bar" method="GET" action="/">
+    <select name="status" id="filter-status">
+        <option value="">All Statuses</option>
+        {% for s in ['discovered', 'scored', 'resume_generated', 'notified', 'applied', 'referral_sent', 'interviewing', 'rejected', 'offer'] %}
+        <option value="{{ s }}" {% if current_status == s %}selected{% endif %}>{{ s | replace('_', ' ') | title }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="company" id="filter-company">
+        <option value="">All Companies</option>
+        {% for c in companies %}
+        <option value="{{ c }}" {% if current_company == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+    </select>
+
+    <select name="min_score" id="filter-score">
+        <option value="">Any Score</option>
+        {% for s in [90, 80, 70, 60, 50] %}
+        <option value="{{ s }}" {% if current_min_score == s %}selected{% endif %}>≥ {{ s }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary">Apply Filters</button>
+    <a href="/" class="btn btn-secondary">Reset</a>
+</form>
+
+<!-- Jobs Table -->
+{% if jobs %}
+<table class="jobs-table">
+    <thead>
+        <tr>
+            <th>Score</th>
+            <th>Company</th>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Discovered</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for job in jobs %}
+        <tr style="--row-index: {{ loop.index }}" onclick="window.location='/job/{{ job.id }}'">
+            <td>
+                {% if job.match_score is not none %}
+                <span class="score-badge {% if job.match_score >= 80 %}score-high{% elif job.match_score >= 60 %}score-medium{% else %}score-low{% endif %}">
+                    {{ job.match_score }}
+                </span>
+                {% else %}
+                <span class="score-badge score-unscored">—</span>
+                {% endif %}
+            </td>
+            <td class="job-company">{{ job.company_name }}</td>
+            <td class="job-title">{{ job.title }}</td>
+            <td class="job-location">{{ job.location or '—' }}</td>
+            <td>
+                <span class="status-badge status-{{ job.status }}">{{ job.status | replace('_', ' ') }}</span>
+            </td>
+            <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {% if job.discovered_at %}
+                {{ job.discovered_at.strftime('%b %d, %H:%M') }}
+                {% endif %}
+            </td>
+            <td>
+                <a href="{{ job.apply_url }}" target="_blank" class="btn btn-sm btn-primary" onclick="event.stopPropagation()">Apply ↗</a>
+                {% if job.resume_path %}
+                <a href="/job/{{ job.id }}/resume" class="btn btn-sm btn-secondary" onclick="event.stopPropagation()">📄 Resume</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page - 1 }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_company %}&company={{ current_company }}{% endif %}{% if current_min_score %}&min_score={{ current_min_score }}{% endif %}">← Prev</a>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+        <span class="current">{{ p }}</span>
+        {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+        <a href="?page={{ p }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_company %}&company={{ current_company }}{% endif %}{% if current_min_score %}&min_score={{ current_min_score }}{% endif %}">{{ p }}</a>
+        {% elif p == 4 or p == total_pages - 3 %}
+        <span style="color: var(--text-muted)">…</span>
+        {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+    <a href="?page={{ page + 1 }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_company %}&company={{ current_company }}{% endif %}{% if current_min_score %}&min_score={{ current_min_score }}{% endif %}">Next →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">🔍</div>
+    <h3>No jobs found</h3>
+    <p>Start the poller to discover new job postings, or adjust your filters.</p>
+</div>
+{% endif %}
+{% endblock %}

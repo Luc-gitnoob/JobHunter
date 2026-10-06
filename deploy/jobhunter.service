@@ -1,0 +1,22 @@
+[Unit]
+Description=JobHunter — Autonomous Job Hunting & Referral Engine
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/JobHunter
+EnvironmentFile=/home/ubuntu/JobHunter/.env
+ExecStart=/home/ubuntu/JobHunter/.venv/bin/python -m src.main
+Restart=always
+RestartSec=10
+
+# Resource limits
+LimitNOFILE=65535
+
+# Logging
+StandardOutput=append:/home/ubuntu/JobHunter/data/jobhunter.log
+StandardError=append:/home/ubuntu/JobHunter/data/jobhunter.log
+
+[Install]
+WantedBy=multi-user.target
