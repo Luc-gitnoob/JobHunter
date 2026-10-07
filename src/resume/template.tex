@@ -33,9 +33,9 @@
 
 % --- Section Formatting ---
 \titleformat{\section}
-  {\normalsize\bfseries\color{sectioncolor}\MakeUppercase}
+  {\large\bfseries\color{sectioncolor}}
   {}{0em}{}
-  [\vspace{-0.55em}\textcolor{rulecolor}{\rule{\textwidth}{0.6pt}}]
+  [\vspace{-0.55em}\textcolor{rulecolor}{\rule{\textwidth}{0.5pt}}]
 \titlespacing*{\section}{0pt}{0.55em}{0.25em}
 
 % --- List Formatting ---
@@ -81,13 +81,15 @@
 \section{Technical Skills}
 \small
 ((* if skill_categories *))
+\begin{itemize}[leftmargin=*,itemsep=-0.15em,topsep=0.1em]
 ((* for cat in skill_categories *))
-\noindent\textbf{((( cat.name ))):} ((( cat.skills | join(', ') )))\\[0.12em]
+    \item \textbf{((( cat.name ))):} ((( cat.skills | join(', ') )))
 ((* endfor *))
+\end{itemize}
 ((* else *))
-\noindent\textbf{Languages \& Frameworks:} ((( core_skills | join(', ') )))\\
+\noindent\textbf{Languages \& Frameworks:} ((( core_skills | join(', ') )))
 ((* endif *))
-\vspace{-0.3em}
+\vspace{-0.2em}
 
 % ===================== EXPERIENCE =====================
 \section{Work Experience}
@@ -134,11 +136,13 @@
 \noindent\textbf{((( edu.institution )))} \hfill \textbf{((( edu.duration )))} \\
 \noindent\textit{\color{subtextColor}((( edu.degree )))} \hfill \textit{\color{subtextColor}CGPA: ((( edu.cgpa )))}
 ((* endfor *))
-\\[0.25em]
+\vspace{0.15em}
 ((* if competitive_programming *))
+\begin{itemize}[leftmargin=*,itemsep=-0.15em,topsep=0.1em]
 ((* for cp in competitive_programming *))
-\noindent$\bullet$ \textbf{((( cp.platform ))) ((( cp.title )))}: ((( cp.details )))\\[0.1em]
+    \item \textbf{((( cp.platform ))) ((( cp.title )))}: ((( cp.details )))
 ((* endfor *))
+\end{itemize}
 ((* endif *))
 
 \end{document}
