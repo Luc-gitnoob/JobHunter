@@ -126,17 +126,20 @@ class PreFilter:
         """
         Check if the job description mentions any experience requirement that is
         disqualifying (>= max_allowed YOE).
-        Handles ranges ('2 to 6 years'), complex phrases ('3+ years of non-internship professional...'),
-        and filters out false positives like company age ('founded 25 years ago').
+        Handles ranges ('2 to 6 years', '4–6 years'), complex phrases ('3+ years of non-internship professional...'),
+        parenthetical plurals ('Year(s)'), and filters out false positives like company age ('founded 25 years ago').
         """
         if not description:
             return False, None
 
-        # Normalize whitespace
-        text = " " + re.sub(r"\s+", " ", description) + " "
+        # Normalize unicode dashes (en-dash, em-dash) and whitespace
+        text = description.replace("–", "-").replace("—", "-")
+        text = " " + re.sub(r"\s+", " ", text) + " "
 
-        # 1. Check ranges: e.g. '2 to 6 years', '3-5 years'
-        range_pattern = r"(\d+)\s*(?:-|to)\s*(\d+)\s*(?:years?|yrs?)\b"
+        year_suffix = r"(?:years?|yrs?|year\(s\)|yr\(s\))"
+
+        # 1. Check ranges: e.g. '2 to 6 years', '4-6 years', '3-5 yrs'
+        range_pattern = rf"(\d+)\s*(?:-|to)\s*(\d+)\s*{year_suffix}\b"
         for m in re.finditer(range_pattern, text, re.IGNORECASE):
             lower = int(m.group(1))
             upper = int(m.group(2))
@@ -148,7 +151,7 @@ class PreFilter:
 
         # 2. Mask valid junior ranges (e.g. '0-2 years', '1-2 yrs') so they don't trigger standalone '2 years' checks
         cleaned_text = re.sub(
-            r"\b(?:0|1)\s*(?:-|to)\s*(?:1|2|3)\s*(?:years?|yrs?)\b",
+            rf"\b(?:0|1)\s*(?:-|to)\s*(?:1|2|3)\s*{year_suffix}\b",
             "JUNIOR_RANGE",
             text,
             flags=re.IGNORECASE,
@@ -156,14 +159,20 @@ class PreFilter:
 
         # 3. Disqualifying standalone YOE patterns
         yoe_patterns = [
-            # 'X+ years of [anything up to 5 words] (experience|engineering|development|building|coding)'
-            r"(\d+)\+?\s*(?:years?|yrs?)\b\s+(?:of\s+)?(?:[\w-]+\s+){0,5}(?:experience|exp|development|engineering|coding|building|architecture)",
+            # 'X+ years of [anything up to 5 words] (experience|engineering|development|building|coding|architecture)'
+            rf"(\d+)\+?\s*{year_suffix}\b\s+(?:of\s+)?(?:[\w-]+\s+){{0,5}}(?:experience|exp|development|engineering|coding|building|architecture)",
+            # 'X+ years in [anything up to 4 words] (roles|positions|domains|environments)'
+            rf"(\d+)\+?\s*{year_suffix}\b\s+(?:in\s+)?(?:[\w-]+\s+){{0,4}}(?:roles?|positions?|domains?|environments?)",
+            # 'X+ years (writing|developing|building|delivering|designing|architecting|working|operating)'
+            rf"(\d+)\+?\s*{year_suffix}\b\s+(?:writing|developing|building|delivering|designing|architecting|working|operating)",
             # 'minimum / at least / must have X(+) years'
-            r"(?:minimum|at\s+least|must\s+have|requires?|looking\s+for)\s+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
+            rf"(?:minimum|at\s+least|must\s+have|requires?|looking\s+for)\s+(?:of\s+)?(\d+)\+?\s*{year_suffix}",
             # 'X+ years with / in [technology]'
-            r"(\d+)\+\s*(?:years?|yrs?)\b(?:\s+(?:in|with)\s+[\w#+.]+)?",
+            rf"(\d+)\+\s*{year_suffix}\b(?:\s+(?:in|with)\s+[\w#+.]+)?",
             # 'Experience: X+ years'
-            r"experience[:\s]+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
+            rf"experience[:\s]+(?:of\s+)?(\d+)\+?\s*{year_suffix}",
+            # 'X+ years (of) (overall) experience'
+            rf"(\d+)\+?\s*{year_suffix}\b\s+(?:of\s+)?(?:overall\s+)?experience",
         ]
 
         for pat in yoe_patterns:
