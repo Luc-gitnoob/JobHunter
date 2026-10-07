@@ -2,8 +2,9 @@ name: JobHunter Automated Poller
 
 on:
   schedule:
-    # Test schedule: runs every 5 minutes to verify cron triggers on public repo
-    - cron: '*/5 * * * *'
+    # Run once daily at 10:07 AM IST (4:37 AM UTC)
+    # Minute 37 is deliberately odd to avoid GitHub's scheduler contention
+    - cron: '37 4 * * *'
   workflow_dispatch: # Allows manual trigger with one click from GitHub Actions UI
 
 permissions:
