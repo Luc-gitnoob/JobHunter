@@ -13,7 +13,7 @@ permissions:
 jobs:
   poll-and-notify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout Repository
