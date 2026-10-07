@@ -35,14 +35,12 @@ def get_max_allowed_yoe(start_date_str: str = "2025-01", as_of: Optional[datetim
     """
     Compute the strict upper bound for YOE (< N years requirement).
     Rule:
-    - Started Jan 2025:
-      - Throughout 2025 (0 to <1 YOE): strict limit is <1 YOE (max_allowed = 1)
-      - Throughout 2026 (1 to <2 YOE): strict limit is <2 YOE (max_allowed = 2)
-      - Throughout 2027 (2 to <3 YOE): strict limit is <3 YOE (max_allowed = 3)
-      - Dynamically updates each year without manual code changes.
+    - Candidate with ~1.75 YOE qualifies for standard early-career SDE 1 roles (1-3 yrs, 2+ yrs, 2-3 yrs).
+    - Sets hard cap to <3 YOE.
+    - Strictly blocks mid/senior roles (3+, 4-6, 6+, 8+ YOE) and all senior titles.
     """
     yoe = calculate_yoe(start_date_str, as_of)
-    return int(yoe) + 1
+    return int(yoe) + 2
 
 
 class PreFilter:
@@ -146,12 +144,12 @@ class PreFilter:
             after_snippet = text[m.end():m.end() + 25].lower()
             if "ago" in after_snippet or "old" in after_snippet:
                 continue
-            if lower >= max_allowed:
+            if lower >= max_allowed or (upper >= 5 and lower >= 2):
                 return True, f"Requires {lower}-{upper} years experience"
 
-        # 2. Mask valid junior ranges (e.g. '0-2 years', '1-2 yrs') so they don't trigger standalone '2 years' checks
+        # 2. Mask valid junior ranges (e.g. '0-2 years', '1-2 yrs', '1-3 yrs', '2-3 yrs') so they don't trigger standalone '2/3 years' checks
         cleaned_text = re.sub(
-            rf"\b(?:0|1)\s*(?:-|to)\s*(?:1|2|3)\s*{year_suffix}\b",
+            rf"\b(?:0|1|2)\s*(?:-|to)\s*(?:1|2|3)\s*{year_suffix}\b",
             "JUNIOR_RANGE",
             text,
             flags=re.IGNORECASE,

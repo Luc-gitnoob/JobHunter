@@ -136,6 +136,25 @@ companies:
     priority: 2
     geo_filter: []
 
+  # === Tier 2: Top Indian Product & Fintech (Greenhouse & Lever) ===
+  - name: Groww
+    ats_platform: greenhouse
+    ats_slug: groww
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: CRED
+    ats_platform: lever
+    ats_slug: cred
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: InMobi
+    ats_platform: greenhouse
+    ats_slug: inmobi
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
 # ============================================================
 # python-jobspy Fallback Searches
 # For companies not on supported ATS platforms, or for
@@ -150,19 +169,59 @@ jobspy_searches:
   - search_term: "Software Engineer Golang"
     location: "India"
     sites: ["linkedin", "indeed"]
-    results_wanted: 20
+    results_wanted: 30
+
+  - search_term: "SDE 1 Backend"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 25
+
+  - search_term: "Junior Backend Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 25
+
+  - search_term: "Golang Developer"
+    location: "India"
+    sites: ["linkedin", "indeed"]
+    results_wanted: 25
+
+  - search_term: "Software Development Engineer 1"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 25
 
   - search_term: "Software Engineer distributed systems"
     location: "Bangalore"
     sites: ["linkedin"]
     results_wanted: 20
 
+  - search_term: "Swiggy Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "PhonePe Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Postman Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "BrowserStack Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
   - search_term: "Razorpay Backend Engineer"
     location: "India"
     sites: ["linkedin"]
-    results_wanted: 10
+    results_wanted: 15
 
   - search_term: "Zerodha Software Engineer"
     location: "Bangalore"
     sites: ["linkedin"]
-    results_wanted: 10
+    results_wanted: 15
