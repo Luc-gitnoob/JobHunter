@@ -131,7 +131,7 @@ class ResumeTailor:
     """
 
     def __init__(self, config: dict):
-        self.model_name = config.get("model", "gemini-2.0-flash")
+        self.model_name = config.get("model", "gemini-3.5-flash-lite")
         self.temperature = config.get("temperature", 0.3)
         self._profile = _load_profile()
         self._profile_text = _format_profile_for_tailor(self._profile)

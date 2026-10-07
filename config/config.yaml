@@ -90,7 +90,7 @@ filters:
 # LLM Scoring
 scoring:
   min_score: 70                   # Only generate resume + notify for scores >= this
-  model: "gemini-3.5-flash-lite"  # High throughput, fast latency, high quota
+  model: "gemini-3.5-flash-lite"  # High throughput, fast latency, accurate scoring
   temperature: 0.3                # Low temp for consistent scoring
 
 # Resume generation
