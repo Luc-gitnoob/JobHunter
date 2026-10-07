@@ -109,7 +109,8 @@ async def _notify_job_alert(
         if tailored:
             context = tailor.build_template_context(tailored)
             try:
-                safe_name = f"{db_job.company_name}_{db_job.title}_{db_job.id}".replace(" ", "_").replace("/", "_")
+                candidate_name = profile.get("name", "Candidate").replace(" ", "_")
+                safe_name = f"{candidate_name}_Resume_{db_job.company_name}_{db_job.title}_{db_job.id}".replace(" ", "_").replace("/", "_")
                 resume_path = compiler.compile(context, safe_name)
             except Exception as e:
                 logger.warning(f"  Resume compilation failed for {db_job.company_name} — {db_job.title}: {e}")
