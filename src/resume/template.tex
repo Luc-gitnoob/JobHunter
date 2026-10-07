@@ -1,15 +1,15 @@
 % ============================================================
-% ATS-Friendly Resume Template for Salil Vaidya
-% Single-column, clean formatting, machine-readable
+% ATS-Optimized FAANG-Caliber Resume Template for Salil Vaidya
+% Single-column, compact 1-page layout, machine-readable
 % Variables are injected via Jinja2 templating before compilation
 % ============================================================
-\documentclass[11pt, a4paper]{article}
+\documentclass[10pt, a4paper]{article}
 
 % --- Packages ---
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
-\usepackage[margin=0.55in]{geometry}
+\usepackage[margin=0.45in]{geometry}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{titlesec}
@@ -17,9 +17,10 @@
 \usepackage{tabularx}
 
 % --- Colors ---
-\definecolor{linkblue}{HTML}{0066CC}
-\definecolor{sectioncolor}{HTML}{1a1a1a}
-\definecolor{rulecolor}{HTML}{cccccc}
+\definecolor{linkblue}{HTML}{0B5394}
+\definecolor{sectioncolor}{HTML}{111827}
+\definecolor{rulecolor}{HTML}{D1D5DB}
+\definecolor{subtextColor}{HTML}{374151}
 
 % --- Hyperlink Setup ---
 \hypersetup{
@@ -32,61 +33,67 @@
 
 % --- Section Formatting ---
 \titleformat{\section}
-  {\large\bfseries\color{sectioncolor}}
+  {\normalsize\bfseries\color{sectioncolor}\MakeUppercase}
   {}{0em}{}
-  [\vspace{-0.6em}\textcolor{rulecolor}{\rule{\textwidth}{0.4pt}}]
-\titlespacing*{\section}{0pt}{0.8em}{0.4em}
+  [\vspace{-0.55em}\textcolor{rulecolor}{\rule{\textwidth}{0.6pt}}]
+\titlespacing*{\section}{0pt}{0.55em}{0.25em}
 
 % --- List Formatting ---
 \setlist[itemize]{
-    leftmargin=1.2em,
-    itemsep=0.1em,
+    leftmargin=1.15em,
+    itemsep=0.08em,
     parsep=0pt,
-    topsep=0.2em,
+    topsep=0.12em,
 }
 
 % --- No page numbers ---
 \pagestyle{empty}
 
 % --- Custom Commands ---
-\newcommand{\resumeHeading}[4]{
-    \textbf{#1} \hfill #2 \\
-    \textit{#3} \hfill \textit{#4}
-    \vspace{0.2em}
+\newcommand{\experienceHeading}[4]{%
+    \noindent\textbf{#1} \hfill \textbf{#2} \\%
+    \noindent\textit{\color{subtextColor}#3} \hfill \textit{\color{subtextColor}#4}%
+    \vspace{-0.15em}%
 }
 
 \begin{document}
 
 % ===================== HEADER =====================
 \begin{center}
-    {\LARGE\textbf{((( name )))}}\\\vspace{0.3em}
-    ((( email ))) $|$
-    ((( phone )))
-    ((* if linkedin *))
-    $|$ \href{((( linkedin )))}{LinkedIn}
-    ((* endif *))
-    ((* if github *))
-    $|$ \href{((( github )))}{GitHub}
-    ((* endif *))
-    ((* if portfolio *))
-    $|$ \href{((( portfolio )))}{Portfolio}
-    ((* endif *))
+    {\LARGE\textbf{((( name )))}}\\[0.2em]
+    \small
+    ((( email ))) $\,\vert\,$ ((( phone )))%
+    ((* if linkedin *)) $\,\vert\,$ \href{((( linkedin )))}{\textbf{LinkedIn}}((* endif *))%
+    ((* if github *)) $\,\vert\,$ \href{((( github )))}{\textbf{GitHub}}((* endif *))%
+    ((* if portfolio *)) $\,\vert\,$ \href{((( portfolio )))}{\textbf{Portfolio}}((* endif *))%
+    $\,\vert\,$ \textbf{LeetCode (Knight)}
 \end{center}
+\vspace{-0.5em}
 
-% ===================== EDUCATION =====================
-\section{Education}
-((* for edu in education *))
-\resumeHeading
-    {((( edu.institution )))}
-    {((( edu.duration )))}
-    {((( edu.degree )))}
-    {CGPA: ((( edu.cgpa )))}
+% ===================== PROFESSIONAL SUMMARY =====================
+((* if summary *))
+\section{Summary}
+\noindent\small ((( summary )))
+\vspace{0.1em}
+((* endif *))
+
+% ===================== TECHNICAL SKILLS =====================
+\section{Technical Skills}
+\small
+((* if skill_categories *))
+((* for cat in skill_categories *))
+\noindent\textbf{((( cat.name ))):} ((( cat.skills | join(', ') )))\\[0.12em]
 ((* endfor *))
+((* else *))
+\noindent\textbf{Languages \& Frameworks:} ((( core_skills | join(', ') )))\\
+((* endif *))
+\vspace{-0.3em}
 
 % ===================== EXPERIENCE =====================
-\section{Experience}
+\section{Work Experience}
+\small
 ((* for exp in experience *))
-\resumeHeading
+\experienceHeading
     {((( exp.company )))}
     {((( exp.duration )))}
     {((( exp.title )))}
@@ -96,14 +103,16 @@
     \item ((( highlight )))
 ((* endfor *))
 \end{itemize}
-\vspace{0.3em}
+\vspace{0.15em}
 ((* endfor *))
+\vspace{-0.3em}
 
 % ===================== PROJECTS =====================
 ((* if projects *))
-\section{Projects}
+\section{Key Projects}
+\small
 ((* for proj in projects *))
-\resumeHeading
+\experienceHeading
     {((( proj.name )))}
     {}
     {((( proj.stack | join(', ') )))}
@@ -113,28 +122,23 @@
     \item ((( highlight )))
 ((* endfor *))
 \end{itemize}
-\vspace{0.3em}
+\vspace{0.15em}
 ((* endfor *))
+\vspace{-0.3em}
 ((* endif *))
 
-% ===================== SKILLS =====================
-\section{Technical Skills}
-((* if skill_categories *))
-((* for cat in skill_categories *))
-\textbf{((( cat.name ))):} ((( cat.skills | join(', ') ))) \\
+% ===================== EDUCATION & ACHIEVEMENTS =====================
+\section{Education \& Achievements}
+\small
+((* for edu in education *))
+\noindent\textbf{((( edu.institution )))} \hfill \textbf{((( edu.duration )))} \\
+\noindent\textit{\color{subtextColor}((( edu.degree )))} \hfill \textit{\color{subtextColor}CGPA: ((( edu.cgpa )))}
 ((* endfor *))
-((* else *))
-\textbf{Languages \& Frameworks:} ((( core_skills | join(', ') ))) \\
-((* endif *))
-
-% ===================== ACHIEVEMENTS =====================
+\\[0.25em]
 ((* if competitive_programming *))
-\section{Achievements}
-\begin{itemize}
 ((* for cp in competitive_programming *))
-    \item \textbf{((( cp.platform ))) ((( cp.title )))} --- ((( cp.details )))
+\noindent$\bullet$ \textbf{((( cp.platform ))) ((( cp.title )))}: ((( cp.details )))\\[0.1em]
 ((* endfor *))
-\end{itemize}
 ((* endif *))
 
 \end{document}

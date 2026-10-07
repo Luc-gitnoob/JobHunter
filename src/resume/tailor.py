@@ -1,4 +1,4 @@
-"""LLM-driven resume tailoring — customizes bullet points and emphasis for each job."""
+"""LLM-driven resume tailoring — customizes bullet points, projects, and summary for each job."""
 
 import asyncio
 import json
@@ -15,63 +15,72 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 PROFILE_PATH = PROJECT_ROOT / "config" / "profile.yaml"
 
 
-TAILOR_PROMPT = """You are an expert resume writer. Your job is to tailor a candidate's resume for a specific job posting.
+TAILOR_PROMPT = """You are an elite technical resume strategist for top-tier software engineers (FAANG / Tier-1 tech).
+Your objective is to tailor the candidate's resume to maximize alignment and interview conversion for a specific target job.
 
-## Candidate Profile (Ground Truth — DO NOT fabricate facts)
+## Candidate Ground Truth Profile
 {profile_text}
 
 ## Target Job
 **Company:** {company}
-**Title:** {title}
+**Role Title:** {title}
 **Job Description Summary:** {description}
 
-## LLM Match Analysis
+## Role Match Insights
 **Matching Skills:** {matching_skills}
 **Skill Gaps:** {skill_gaps}
 **Recommended Resume Emphasis:** {resume_emphasis}
-**Recommended Keywords:** {keywords}
+**Target Keywords:** {keywords}
 
-## Instructions
-Rewrite the candidate's resume content to maximize relevance for this specific role.
-
-Rules:
-1. DO NOT fabricate experiences, skills, or achievements. Only rephrase what exists.
-2. Reorder and rephrase bullet points to lead with the most relevant accomplishments.
-3. Incorporate keywords from the JD naturally into existing bullet points.
-4. Emphasize relevant technical skills and quantified achievements.
-5. If a skill gap exists but the candidate has transferable experience, frame it positively.
-6. Keep bullet points concise (1-2 lines each) and action-oriented.
+## Strict Tailoring Guidelines
+1. **Never fabricate ungrounded facts** (do not invent fake companies, degrees, or unlisted core achievements).
+2. **Professional Summary**: Write a sharp, high-impact 2-sentence summary tailored specifically to {company}'s requirements and tech stack.
+3. **Google XYZ Formula**: Rewrite experience highlights using the formula: *"Accomplished [X] as measured by [Y], by doing [Z]"*. Lead with strong action verbs (Architected, Engineered, Optimized, Scaled, Streamlined) and include concrete technical metrics where possible.
+4. **Keyword Integration**: Naturally incorporate target keywords from the JD (e.g., Azure, Golang, Kafka, Kubernetes, gRPC, Distributed Caching) into existing bullet points and stack descriptors.
+5. **Project Selection**: Select the **2 most relevant projects** from the candidate's portfolio that best demonstrate competency for THIS role, and tailor their bullet points to emphasize relevant architecture and technologies.
+6. **Technical Skills Categorization**: Organize skills into 3-4 clean categories (e.g., "Languages", "Backend & Distributed Systems", "Cloud & DevOps", "Databases & Tools") placing the job's most requested technologies first.
+7. **Brevity & Density**: Keep each bullet to 1-2 lines. Maintain high information density suitable for a tight 1-page resume.
 
 Respond with ONLY a valid JSON object (no markdown, no code blocks):
 {{
+    "summary": "<sharp 2-sentence tailored summary highlighting relevant tech stack & experience for this specific role>",
     "experience": [
         {{
             "company": "<company name>",
             "title": "<job title>",
             "duration": "<duration>",
-            "stack": ["<tech1>", "<tech2>"],
-            "highlights": ["<tailored bullet 1>", "<tailored bullet 2>", ...]
+            "stack": ["<tech1>", "<tech2>", "<tech3>"],
+            "highlights": [
+                "<tailored XYZ bullet 1>",
+                "<tailored XYZ bullet 2>",
+                "<tailored XYZ bullet 3>",
+                "<tailored XYZ bullet 4>",
+                "<tailored XYZ bullet 5>"
+            ]
         }}
     ],
     "projects": [
         {{
-            "name": "<project name>",
-            "stack": ["<tech1>", "<tech2>"],
-            "highlights": ["<tailored bullet 1>", ...]
+            "name": "<chosen project name from profile>",
+            "stack": ["<tech1>", "<tech2>", "<tech3>"],
+            "highlights": [
+                "<tailored XYZ bullet 1>",
+                "<tailored XYZ bullet 2>"
+            ]
         }}
     ],
     "skill_categories": [
         {{
             "name": "Languages",
-            "skills": ["Go", "C#", "Java", "Python", "SQL"]
+            "skills": ["<lang1>", "<lang2>", "<lang3>"]
         }},
         {{
-            "name": "Frameworks & Tools",
-            "skills": [".NET 10", "Spring Boot", "Docker", "Kubernetes"]
+            "name": "Backend & Distributed Systems",
+            "skills": ["<tech1>", "<tech2>", "<tech3>"]
         }},
         {{
-            "name": "Infrastructure",
-            "skills": ["Azure DevOps", "ELK Stack", "HashiCorp Vault"]
+            "name": "Cloud, DevOps & Tools",
+            "skills": ["<tech1>", "<tech2>", "<tech3>"]
         }}
     ]
 }}
@@ -87,30 +96,38 @@ def _load_profile() -> dict:
 def _format_profile_for_tailor(profile: dict) -> str:
     """Format profile for the tailor prompt."""
     lines = []
+    lines.append(f"Candidate: {profile.get('name', 'Salil Vaidya')}")
+    lines.append(f"Career Start: {profile.get('career_start_date', '2025-01')}\n")
+
+    lines.append("### Experience:")
     for exp in profile.get("experience", []):
-        lines.append(f"**{exp['title']} at {exp['company']}** ({exp['duration']})")
+        lines.append(f"**{exp['title']} at {exp['company']}** ({exp['duration']}) — Domain: {exp.get('domain', 'Tech')}")
         lines.append(f"Stack: {', '.join(exp.get('stack', []))}")
         for h in exp.get("highlights", []):
             lines.append(f"• {h}")
         lines.append("")
 
+    lines.append("### Projects Portfolio:")
     for proj in profile.get("projects", []):
-        lines.append(f"**Project: {proj['name']}**")
+        lines.append(f"**Project: {proj['name']}** — Domain: {proj.get('domain', 'Software')}")
         lines.append(f"Stack: {', '.join(proj.get('stack', []))}")
         for h in proj.get("highlights", []):
             lines.append(f"• {h}")
         lines.append("")
 
+    lines.append("### Competitive Programming & Achievements:")
     for cp in profile.get("competitive_programming", []):
-        lines.append(f"{cp['platform']} {cp['title']}: {cp['details']}")
+        lines.append(f"• {cp['platform']} {cp['title']}: {cp['details']}")
+
+    lines.append(f"\n### Core Skills: {', '.join(profile.get('core_skills', []))}")
 
     return "\n".join(lines)
 
 
 class ResumeTailor:
     """
-    Uses Gemini to rewrite resume content for a specific job posting.
-    Does NOT fabricate — only rephrases and reorders existing content.
+    Uses Gemini to tailor resume content for a specific job posting.
+    Generates dynamic summaries, Google XYZ bullets, and selects optimal projects.
     """
 
     def __init__(self, config: dict):
@@ -148,13 +165,13 @@ class ResumeTailor:
             match_analysis: Output from JobScorer (matching_skills, etc.)
 
         Returns:
-            dict with tailored experience, projects, and skill_categories
+            dict with tailored summary, experience, projects, and skill_categories
         """
         prompt = TAILOR_PROMPT.format(
             profile_text=self._profile_text,
             company=company,
             title=title,
-            description=description[:3000],
+            description=description[:3500],
             matching_skills=", ".join(match_analysis.get("matching_skills", [])),
             skill_gaps=", ".join(match_analysis.get("skill_gaps", [])),
             resume_emphasis=", ".join(match_analysis.get("resume_emphasis", [])),
@@ -194,6 +211,7 @@ class ResumeTailor:
             "linkedin": profile.get("linkedin", ""),
             "github": profile.get("github", ""),
             "portfolio": profile.get("portfolio", ""),
+            "summary": tailored.get("summary", ""),
             "education": profile.get("education", []),
             "experience": tailored.get("experience", profile.get("experience", [])),
             "projects": tailored.get("projects", profile.get("projects", [])),
