@@ -2,8 +2,9 @@ name: JobHunter Automated Poller
 
 on:
   schedule:
-    # Run once daily at 9:30 AM IST (4:00 AM UTC)
-    - cron: '0 4 * * *'
+    # Run twice daily at 9:45 AM IST (4:15 AM UTC) and 6:45 PM IST (1:15 PM UTC)
+    # Using minute 15 avoids GitHub's top-of-the-hour (:00) queue contention and dropped runs
+    - cron: '15 4,13 * * *'
   workflow_dispatch: # Allows manual trigger with one click from GitHub Actions UI
 
 permissions:

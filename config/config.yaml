@@ -4,7 +4,7 @@
 
 # Polling schedule
 scheduler:
-  poll_interval_minutes: 1440  # Once a day (24 hours)
+  poll_interval_minutes: 720  # Twice a day (every 12 hours)
   # Stagger requests to avoid burst traffic
   request_delay_seconds: 2
 
