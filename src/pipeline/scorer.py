@@ -188,15 +188,15 @@ class JobScorer:
             # Programmatic safety valve: if JD mentions >= max_allowed_yoe, clamp score below threshold
             if result["match_score"] >= self.min_score:
                 from src.pipeline.filters import PreFilter
-                yoe_mentioned = PreFilter(config={})._extract_yoe(description)
-                if yoe_mentioned is not None and yoe_mentioned >= self.max_allowed_yoe:
+                is_disqualified, reason = PreFilter(config={}).check_disqualifying_yoe(description, self.max_allowed_yoe)
+                if is_disqualified:
                     logger.warning(
                         f"  [Scorer Safety] Clamping score for {company} — {title}: "
-                        f"JD mentions {yoe_mentioned}+ YOE (hard limit <{self.max_allowed_yoe} YOE)."
+                        f"{reason} (hard limit <{self.max_allowed_yoe} YOE)."
                     )
                     result["match_score"] = 30
                     result["summary"] = (
-                        f"Automatically rejected: JD requires {yoe_mentioned}+ YOE. "
+                        f"Automatically rejected: {reason}. "
                         f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
                     )
 

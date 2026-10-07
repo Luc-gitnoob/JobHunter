@@ -94,12 +94,19 @@ class PreFilter:
             if not any(kw in title_lower for kw in self.title_include):
                 return False, f"Title '{job.title}' doesn't match any include keywords"
 
-        # 2. Title must NOT contain any exclude keywords
+        # 2. Title must NOT contain any exclude keywords (using delimiter boundaries to prevent substring collisions)
         for kw in self.title_exclude:
-            if kw in title_lower:
+            pat = r"(?:^|[\s\-_,.:/()|])" + re.escape(kw) + r"(?:$|[\s\-_,.:/()|])"
+            if re.search(pat, title_lower):
                 return False, f"Title '{job.title}' matches exclude keyword: '{kw}'"
 
-        # 3. Geographic filter (if provided per-company)
+        # 3. Title YOE check — reject senior roles specifying YOE in title (e.g. "Software Engineer (3+ YOE)")
+        if self.max_yoe and job.title:
+            is_disqualified, reason = self.check_disqualifying_yoe(job.title, self.max_yoe)
+            if is_disqualified:
+                return False, f"Title mentions disqualifying experience: {reason} (candidate upper bound: <{self.max_yoe} YOE)"
+
+        # 4. Geographic filter (if provided per-company)
         if geo_filter and job.location:
             location_lower = job.location.lower()
             if not any(geo.lower() in location_lower for geo in geo_filter):
@@ -107,44 +114,75 @@ class PreFilter:
                 if "remote" not in location_lower:
                     return False, f"Location '{job.location}' not in geo filter: {geo_filter}"
 
-        # 4. YOE check — strict hard requirement (< max_yoe)
+        # 5. YOE check — strict hard requirement (< max_yoe)
         if self.max_yoe and job.description:
-            yoe_mentioned = self._extract_yoe(job.description)
-            if yoe_mentioned is not None and yoe_mentioned >= self.max_yoe:
-                return False, f"JD requires {yoe_mentioned}+ YOE (hard limit: <{self.max_yoe} YOE)"
+            is_disqualified, reason = self.check_disqualifying_yoe(job.description, self.max_yoe)
+            if is_disqualified:
+                return False, f"JD exceeds candidate experience threshold: {reason} (candidate upper bound: <{self.max_yoe} YOE)"
 
         return True, None
 
-    def _extract_yoe(self, description: str) -> Optional[int]:
+    def check_disqualifying_yoe(self, description: str, max_allowed: int) -> tuple[bool, Optional[str]]:
         """
-        Extract minimum years of experience from job description.
-        Covers phrasing like: "2+ years developing", "3+ years building",
-        "minimum 2 years", "2-4 years", "3+ yrs in Go", "must have 2+ years".
+        Check if the job description mentions any experience requirement that is
+        disqualifying (>= max_allowed YOE).
+        Handles ranges ('2 to 6 years'), complex phrases ('3+ years of non-internship professional...'),
+        and filters out false positives like company age ('founded 25 years ago').
         """
-        patterns = [
-            # Explicit requirements markers: 'requires 3+ years', 'minimum 2 years', 'must have 3 years'
-            r"(?:require[sd]?|minimum|at least|must have|looking for)[:\s]+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
-            # X+ years of / X+ years building / developing / writing / software / engineering / backend / full-stack
-            r"(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp|working|building|developing|writing|coding|software|engineering|backend|frontend|fullstack|full-stack|systems|industry|professional|production|relevant)",
-            # X+ years with / in a technology: '2+ years with Python', '3+ years in Go'
-            r"(\d+)\+?\s*(?:years?|yrs?)\s+(?:in|with)\s+[A-Za-z#+.]+",
-            # X-Y years or X to Y years: '2-4 years', '3 to 5 years', '3-5 yrs'
-            r"(\d+)\s*(?:-|to)\s*\d+\s*(?:years?|yrs?)",
-            # X+ years or X+ yrs standalone (e.g. '2+ years', '3+ yrs')
-            r"(\d+)\+\s*(?:years?|yrs?)",
-            # 'minimum of X years', 'at least X years'
-            r"(?:minimum|at least)\s+(?:of\s+)?(\d+)\s*(?:years?|yrs?)",
+        if not description:
+            return False, None
+
+        # Normalize whitespace
+        text = " " + re.sub(r"\s+", " ", description) + " "
+
+        # 1. Check ranges: e.g. '2 to 6 years', '3-5 years'
+        range_pattern = r"(\d+)\s*(?:-|to)\s*(\d+)\s*(?:years?|yrs?)\b"
+        for m in re.finditer(range_pattern, text, re.IGNORECASE):
+            lower = int(m.group(1))
+            upper = int(m.group(2))
+            after_snippet = text[m.end():m.end() + 25].lower()
+            if "ago" in after_snippet or "old" in after_snippet:
+                continue
+            if lower >= max_allowed:
+                return True, f"Requires {lower}-{upper} years experience"
+
+        # 2. Mask valid junior ranges (e.g. '0-2 years', '1-2 yrs') so they don't trigger standalone '2 years' checks
+        cleaned_text = re.sub(
+            r"\b(?:0|1)\s*(?:-|to)\s*(?:1|2|3)\s*(?:years?|yrs?)\b",
+            "JUNIOR_RANGE",
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        # 3. Disqualifying standalone YOE patterns
+        yoe_patterns = [
+            # 'X+ years of [anything up to 5 words] (experience|engineering|development|building|coding)'
+            r"(\d+)\+?\s*(?:years?|yrs?)\b\s+(?:of\s+)?(?:[\w-]+\s+){0,5}(?:experience|exp|development|engineering|coding|building|architecture)",
+            # 'minimum / at least / must have X(+) years'
+            r"(?:minimum|at\s+least|must\s+have|requires?|looking\s+for)\s+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
+            # 'X+ years with / in [technology]'
+            r"(\d+)\+\s*(?:years?|yrs?)\b(?:\s+(?:in|with)\s+[\w#+.]+)?",
+            # 'Experience: X+ years'
+            r"experience[:\s]+(?:of\s+)?(\d+)\+?\s*(?:years?|yrs?)",
         ]
 
-        min_yoe = None
-        for pattern in patterns:
-            matches = re.findall(pattern, description, re.IGNORECASE)
-            for match in matches:
-                try:
-                    yoe = int(match)
-                    if min_yoe is None or yoe < min_yoe:
-                        min_yoe = yoe
-                except ValueError:
+        for pat in yoe_patterns:
+            for m in re.finditer(pat, cleaned_text, re.IGNORECASE):
+                num = int(m.group(1))
+                after_snippet = cleaned_text[m.end():m.end() + 25].lower()
+                if "ago" in after_snippet or "old" in after_snippet:
                     continue
+                if num >= max_allowed:
+                    matched_snippet = m.group(0).strip()
+                    return True, f"Requires {num}+ years ({matched_snippet})"
 
-        return min_yoe
+        return False, None
+
+    def _extract_yoe(self, description: str) -> Optional[int]:
+        """Backwards-compatible helper returning the disqualifying YOE found or None."""
+        is_disqualified, reason = self.check_disqualifying_yoe(description, self.max_yoe or 2)
+        if is_disqualified and reason:
+            match = re.search(r"(\d+)", reason)
+            if match:
+                return int(match.group(1))
+        return None

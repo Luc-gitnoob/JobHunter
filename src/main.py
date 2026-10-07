@@ -407,6 +407,22 @@ async def run_poll_cycle(all_config: dict):
             logger.warning("  [LLM] Daily quota reached. Skipping remaining unscored jobs until next cycle.")
             break
 
+        # Safety: re-verify against pre_filter in case rules/thresholds were updated since insertion
+        passes, filter_reason = pre_filter.apply(db_job)
+        if not passes:
+            logger.info(
+                f"  [PreFilter Purge] Discarding queued job {db_job.company_name} — {db_job.title}: {filter_reason}"
+            )
+            async with AsyncSessionLocal() as session:
+                from sqlalchemy import update
+                await session.execute(
+                    update(Job)
+                    .where(Job.id == db_job.id)
+                    .values(is_filtered_out=True, filter_reason=filter_reason)
+                )
+                await session.commit()
+            continue
+
         try:
             score_result = await scorer.score_job(
                 company=db_job.company_name,
