@@ -179,9 +179,9 @@ def generate_referral_message(
     skills_highlight = ", ".join(matching_skills[:5])
 
     message = (
-        f"Hi! I'm {candidate_name}, an SDE at NAV Fund Services working on "
-        f"backend systems and microservices. I came across the {title} role at "
-        f"{company} and wanted to reach out.\n\n"
+        f"Hi, I hope you’re doing well. "
+        f"I’m currently working as a Software Development Engineer at NAV Fund Services. "
+        f"I came across the {title} role at {company} and wanted to reach out.\n\n"
         f"My background is a close fit: I have hands-on experience with "
         f"{skills_highlight}, building high-throughput backend services and infrastructure "
         f"supporting 60+ hedge fund clients.\n\n"

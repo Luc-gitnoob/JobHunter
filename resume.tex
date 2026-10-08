@@ -1,0 +1,101 @@
+\documentclass[a4paper,11pt]{article}
+
+%-Packages ---
+\usepackage[top=0.8cm, bottom=0.8cm, left=0.95cm, right=0.95cm]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fontawesome5}
+\usepackage{hyperref}
+\usepackage{times}
+\usepackage[usenames,dvipsnames]{xcolor}
+
+%-Link styling ---
+\definecolor{linkcolour}{rgb}{0,0.2,0.6}
+\hypersetup{colorlinks,breaklinks,urlcolor=linkcolour,linkcolor=linkcolour}
+
+%-Layout & Spacing ---
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\vspace{1.5pt}\titlerule]
+\titlespacing*{\section}{0pt}{7.5pt}{4.5pt}
+\setlist[itemize]{topsep=1.5pt, parsep=0pt, partopsep=0pt, itemsep=1.6pt, left=0.5em}
+\pagestyle{empty}
+
+% =============================================================================
+\begin{document}
+% =============================================================================
+
+%-Header ---
+\begin{center}
+{\LARGE\textbf{Salil Vaidya}}\\[3pt]
+\href{mailto:salilvaidya003@gmail.com}{\faEnvelope\ salilvaidya003@gmail.com}%
+\hspace{0.9em}\textbar\hspace{0.9em}%
+\href{tel:+919082854061}{\faPhone\ +91-9082854061}%
+\hspace{0.9em}\textbar\hspace{0.9em}%
+\href{https://linkedin.com/in/salil-v}{\faLinkedin\ salil-v}%
+\hspace{0.9em}\textbar\hspace{0.9em}%
+\href{https://github.com/Luc-gitnoob}{\faGithub\ Luc-gitnoob}
+\end{center}
+\vspace{-3pt}
+
+%-Education ---
+\section*{Education}
+\textbf{Indian Institute of Information Technology (IIIT), Kota} \hfill \textbf{2021 -- 2025} \\
+B.Tech in Electronics and Communication Engineering (ECE) \hfill CGPA: \textbf{8.00}
+
+%-Skills ---
+\section*{Skills}
+\begin{itemize}
+ \item \textbf{Languages:} Java, Golang, C\#, SQL, Python, JavaScript, C++
+ \item \textbf{Backend \& Architecture:} Spring Boot, .NET 10, Microservices, RESTful APIs, Dependency Injection, OpenAPI
+ \item \textbf{Databases \& Caching:} Microsoft SQL Server, MongoDB, Redis, Dapper ORM
+ \item \textbf{Cloud, DevOps \& Security:} Docker, Kubernetes, Azure, Azure DevOps CI/CD, Git, HashiCorp Vault, Kerberos, RBAC
+ \item \textbf{Testing \& Observability:} Playwright, Jest, ELK Stack (Elasticsearch, Logstash, Kibana), Filebeat, Distributed Tracing
+\end{itemize}
+
+%-Work Experience ---
+\section*{Work Experience}
+\textbf{NAV Fund Services} (Fintech) \textbar\ Software Development Engineer \hfill \textbf{Jan 2025 -- Present} \\
+{\small\textit{Golang, C\#, .NET 10, Java, Docker, Kubernetes, SQL Server, Redis, ELK Stack, HashiCorp Vault}}\par\vspace{1.5pt}
+\begin{itemize}
+ \item Led modernization of legacy monolithic services into scalable \textbf{RESTful microservices}, maintaining full backward compatibility for \textbf{62+ hedge fund clients} across 484+ configurations, boosting throughput by \textbf{4.5$\times$}.
+ \item Engineered an enterprise authentication platform in \textbf{Golang} implementing Kerberos SPNEGO SSO, TOTP multi-factor authentication, and \textbf{HashiCorp Vault} dynamic secret rotation to centralize distributed access.
+ \item Containerized backend services using multi-stage Docker builds and deployed to high-availability \textbf{Kubernetes} clusters with rolling updates, autoscaling, and enterprise Kerberos verification.
+ \item Engineered production observability with the \textbf{ELK stack} and correlation-based distributed tracing; implemented dual-channel alerting with cache-based rate limiting for the Elsa 3 workflow engine.
+ \item Automated enterprise user provisioning via \textbf{Azure Active Directory} (Microsoft Graph APIs); expanded \textbf{RBAC} approval workflows in .NET and SQL Server, and established test suites across \textbf{Jest} and \textbf{Playwright} in CI/CD.
+\end{itemize}
+
+\vspace{6.5pt}
+\textbf{Gap Inc.} \textbar\ Software Development Intern \hfill \textbf{July 2024 -- Aug 2024} \\
+{\small\textit{Java, Spring Boot, Azure Data Factory, REST APIs}}\par\vspace{1.5pt}
+\begin{itemize}
+ \item Developed RESTful APIs using \textbf{Java Spring Boot}, built cloud ETL pipelines with \textbf{Azure Data Factory}, and delivered backend services following Agile software practices.
+\end{itemize}
+
+%-Projects ---
+\section*{Projects}
+\textbf{Algorithmic Trading Platform} \hfill \textbf{2024} \\
+{\small\textit{Python, Django, React, WebSockets, Pandas, NumPy}}\par\vspace{1.5pt}
+\begin{itemize}
+ \item Engineered a fully automated equity trading platform with low-latency \textbf{WebSocket} streaming, broker API integration, and a \textbf{Django} backend for real-time technical analysis and automated order routing.
+ \item Optimized trade execution using a multithreaded backtesting engine; validated across 1 year of historical market data achieving \textbf{69.02\% CAGR} with \textbf{0.85 win rate}; built a live React dashboard for performance monitoring.
+\end{itemize}
+
+\vspace{6.5pt}
+\textbf{Webhook Delivery Engine} \hfill \textbf{2025} \\
+{\small\textit{Golang, Redis, PostgreSQL, Docker, HMAC-SHA256, REST APIs}}\par\vspace{1.5pt}
+\begin{itemize}
+ \item Engineered a resilient asynchronous webhook delivery microservice in \textbf{Golang} dispatching real-time notifications to subscriber endpoints, processing \textbf{10,000+ events/min}.
+ \item Implemented \textbf{HMAC-SHA256} signature verification for payload security, exponential backoff retries with jitter, and a \textbf{Dead-Letter Queue (DLQ)} for handling transient recipient outages.
+ \item Built a concurrent worker pool with \textbf{Redis} priority queues, PostgreSQL audit logging, and health/latency monitoring.
+\end{itemize}
+
+%-Achievements ---
+\section*{Achievements}
+\begin{itemize}
+ \item \textbf{Codeforces Expert}: Max rating \textbf{1862}, global rank \textbf{46} in Round 941.
+ \item \textbf{LeetCode Knight}: Max rating \textbf{1854}, top 5\%, rank \textbf{520}; solved \textbf{800+} problems across competitive platforms.
+ \item Delivered end-to-end fintech migration over \textbf{7 months}, from architecture through Kubernetes deployment with \textbf{zero production incidents}.
+\end{itemize}
+
+\end{document}
