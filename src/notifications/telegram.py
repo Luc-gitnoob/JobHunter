@@ -22,8 +22,7 @@ class TelegramNotifier:
     - Job title, company, location
     - Match score and analysis summary
     - Direct apply link
-    - Pre-drafted referral message
-    - Tailored resume PDF (as document attachment)
+    - Pre-drafted referral message (candidate attaches master resume directly)
     """
 
     def __init__(self):
@@ -115,25 +114,7 @@ class TelegramNotifier:
                     )
                     text_response.raise_for_status()
 
-                # Only send resume attachment if it has been compiled to a ready-to-share PDF
-                if resume_path and resume_path.exists() and resume_path.suffix.lower() == ".pdf":
-                    with open(resume_path, "rb") as doc_file:
-                        doc_response = await client.post(
-                            f"{TELEGRAM_API.format(token=self.token)}/sendDocument",
-                            data={
-                                "chat_id": self.chat_id,
-                                "caption": f"📄 Tailored resume for {company} — {title}",
-                            },
-                            files={
-                                "document": (
-                                    resume_path.name,
-                                    doc_file,
-                                    "application/pdf",
-                                ),
-                            },
-                        )
-                        doc_response.raise_for_status()
-
+                # Note: Master resume PDF is managed directly by the candidate; do not attach PDFs to Telegram alerts.
             logger.info(f"[Telegram] Sent alert for {company} — {title}")
             return True
 

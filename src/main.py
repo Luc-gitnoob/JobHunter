@@ -20,6 +20,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -91,30 +92,13 @@ SOURCES = {
 async def _notify_job_alert(
     db_job: Job,
     score_result: dict,
-    tailor: ResumeTailor,
-    compiler: ResumeCompiler,
+    tailor: Optional[ResumeTailor],
+    compiler: Optional[ResumeCompiler],
     notifier: TelegramNotifier,
     profile: dict,
 ) -> bool:
-    """Generate tailored resume and deliver real-time Telegram alert for a high-matching job."""
+    """Deliver real-time Telegram alert and referral message for a high-matching job."""
     try:
-        tailored = await tailor.tailor(
-            company=db_job.company_name,
-            title=db_job.title,
-            description=db_job.description or "",
-            match_analysis=score_result,
-        )
-
-        resume_path = None
-        if tailored:
-            context = tailor.build_template_context(tailored)
-            try:
-                candidate_name = profile.get("name", "Candidate").replace(" ", "_")
-                safe_name = f"{candidate_name}_Resume_{db_job.company_name}_{db_job.title}_{db_job.id}".replace(" ", "_").replace("/", "_")
-                resume_path = compiler.compile(context, safe_name)
-            except Exception as e:
-                logger.warning(f"  Resume compilation failed for {db_job.company_name} — {db_job.title}: {e}")
-
         referral_msg = generate_referral_message(
             candidate_name=profile["name"],
             company=db_job.company_name,
@@ -132,18 +116,14 @@ async def _notify_job_alert(
             match_summary=score_result.get("summary", ""),
             matching_skills=score_result.get("matching_skills", []),
             referral_message=referral_msg,
-            resume_path=resume_path,
         )
 
         async with AsyncSessionLocal() as session:
             from sqlalchemy import update
             update_values = {
                 "referral_message": referral_msg,
-                "status": "notified" if sent else ("resume_generated" if resume_path else "scored"),
+                "status": "notified" if sent else "scored",
             }
-            if resume_path:
-                update_values["resume_path"] = str(resume_path)
-                update_values["resume_generated_at"] = datetime.now(timezone.utc)
             if sent:
                 update_values["notified"] = True
                 update_values["notified_at"] = datetime.now(timezone.utc)
@@ -158,7 +138,7 @@ async def _notify_job_alert(
         return sent
 
     except Exception as e:
-        logger.error(f"  Resume/notification error for {db_job.company_name}/{db_job.title}: {e}")
+        logger.error(f"  Notification error for {db_job.company_name}/{db_job.title}: {e}")
         return False
 
 
