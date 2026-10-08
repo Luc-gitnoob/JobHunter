@@ -180,11 +180,11 @@ def generate_referral_message(
 
     message = (
         f"Hi! I'm {candidate_name}, an SDE at NAV Fund Services working on "
-        f"backend systems in Go and .NET. I came across the {title} role at "
+        f"backend systems and microservices. I came across the {title} role at "
         f"{company} and wanted to reach out.\n\n"
-        f"My background aligns closely — I have hands-on experience with "
-        f"{skills_highlight}, building high-throughput microservices and infrastructure "
-        f"serving 20+ hedge funds.\n\n"
+        f"My background is a close fit: I have hands-on experience with "
+        f"{skills_highlight}, building high-throughput backend services and infrastructure "
+        f"supporting 60+ hedge fund clients.\n\n"
         f"Here is the role link: {apply_url}\n\n"
         f"Would you be open to passing along a referral for this opening? "
         f"I've attached my resume, and I'd be happy to chat or provide any details needed.\n\n"
