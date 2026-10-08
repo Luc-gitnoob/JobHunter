@@ -29,31 +29,31 @@ companies:
     ats_platform: greenhouse
     ats_slug: cloudflare
     priority: 1
-    geo_filter: ["India", "Remote", "London"]
+    geo_filter: ["India", "Remote"]
 
   - name: Datadog
     ats_platform: greenhouse
     ats_slug: datadog
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Figma
     ats_platform: greenhouse
     ats_slug: figma
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Discord
     ats_platform: greenhouse
     ats_slug: discord
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Anthropic
     ats_platform: greenhouse
     ats_slug: anthropic
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Tower Research Capital
     ats_platform: greenhouse
@@ -65,63 +65,63 @@ companies:
     ats_platform: greenhouse
     ats_slug: janestreet
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Rubrik
     ats_platform: greenhouse
     ats_slug: rubrik
     priority: 1
-    geo_filter: ["India", "Bangalore"]
+    geo_filter: ["India", "Bangalore", "Remote"]
 
   - name: Reddit
     ats_platform: greenhouse
     ats_slug: reddit
     priority: 2
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Brex
     ats_platform: greenhouse
     ats_slug: brex
     priority: 2
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   # === Tier 1: Modern Tech & AI (Ashby) ===
   - name: Notion
     ats_platform: ashby
     ats_slug: notion
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Ramp
     ats_platform: ashby
     ats_slug: ramp
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Linear
     ats_platform: ashby
     ats_slug: linear
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: Perplexity
     ats_platform: ashby
     ats_slug: perplexity
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   - name: OpenAI
     ats_platform: ashby
     ats_slug: openai
     priority: 1
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   # === Tier 2: Crypto & Fintech (Lever) ===
   - name: Kraken
     ats_platform: lever
     ats_slug: kraken
     priority: 2
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   # === Tier 2: Global Tech & Mobility (SmartRecruiters) ===
   - name: Bosch Group
@@ -134,7 +134,7 @@ companies:
     ats_platform: smartrecruiters
     ats_slug: deliveryhero
     priority: 2
-    geo_filter: []
+    geo_filter: ["India", "Remote"]
 
   # === Tier 2: Top Indian Product & Fintech (Greenhouse & Lever) ===
   - name: Groww
