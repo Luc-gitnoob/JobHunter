@@ -37,6 +37,7 @@ from src.ingestion.lever import LeverSource
 from src.ingestion.ashby import AshbySource
 from src.ingestion.smartrecruiters import SmartRecruitersSource
 from src.ingestion.jobspy_source import JobSpySource
+from src.ingestion.instahyre_source import InstahyreSource
 from src.pipeline.normalizer import normalize_job
 from src.pipeline.filters import PreFilter
 from src.pipeline.dedup import DedupEngine
@@ -257,6 +258,22 @@ async def run_poll_cycle(all_config: dict):
             all_raw_jobs.extend(jobs)
         except Exception as e:
             logger.error(f"  [jobspy] Search '{search.get('search_term')}': ERROR — {e}")
+
+    # --- Phase 1c: Instahyre targeted searches ---
+    instahyre_source = InstahyreSource()
+    for search in companies_config.get("instahyre_searches", []):
+        try:
+            jobs = await instahyre_source.fetch_jobs(
+                job_functions=search.get("job_functions", "10"),
+                years=search.get("years", "1"),
+                skills=search.get("skills"),
+                locations=search.get("locations"),
+                results_wanted=search.get("results_wanted", 30),
+                max_yoe=pre_filter.max_yoe,
+            )
+            all_raw_jobs.extend(jobs)
+        except Exception as e:
+            logger.error(f"  [instahyre] Search '{search}': ERROR — {e}")
 
     logger.info(f"\nTotal raw jobs fetched: {len(all_raw_jobs)}")
 

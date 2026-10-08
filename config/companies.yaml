@@ -225,3 +225,22 @@ jobspy_searches:
     location: "Bangalore"
     sites: ["linkedin"]
     results_wanted: 15
+
+# ============================================================
+# Instahyre Targeted Searches
+# Direct API ingestion from Instahyre with Cloudflare bypass,
+# targeted backend skills, and strict 0-1 YOE filtering.
+# ============================================================
+instahyre_searches:
+  - job_functions: "10"               # Backend Development
+    years: "1"                        # 1 YOE
+    skills: ["Golang", "Java", "Python", "Backend"]
+    locations: ["Bangalore", "Hyderabad", "Pune", "Gurgaon", "Work From Home"]
+    results_wanted: 30
+
+  - job_functions: "10"               # Backend Development (Entry level / 0 YOE)
+    years: "0"
+    skills: ["Golang", "Java", "Python"]
+    locations: ["Bangalore", "Hyderabad", "Pune", "Gurgaon", "Work From Home"]
+    results_wanted: 20
+
