@@ -207,7 +207,7 @@ filters:
 # LLM Scoring
 scoring:
   min_score: 80                   # Top-tier product match threshold (filters out marginal fullstack/AWS roles)
-  model: "gemini-3.6-flash"       # Updated from deprecated 3.5; high throughput, lower latency, accurate scoring
+  model: "gemini-3.5-flash-lite"  # High free tier quota (hundreds of requests/day) vs 20 RPD cap on full 3.6 flash
   temperature: 0.3                # Low temp for consistent scoring
 
 # Telegram notifications

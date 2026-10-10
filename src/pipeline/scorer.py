@@ -113,7 +113,8 @@ class JobScorer:
         Args:
             config: The 'scoring' section from config.yaml
         """
-        self.model_name = config.get("model", "gemini-3.6-flash")
+        self.model_name = config.get("model", "gemini-3.5-flash-lite")
+        self.fallback_model = "gemini-flash-lite-latest"
         self.temperature = config.get("temperature", 0.3)
         self.min_score = config.get("min_score", 70)
         self._profile = _load_profile()
@@ -122,23 +123,21 @@ class JobScorer:
         from src.pipeline.filters import calculate_yoe, get_max_allowed_yoe
         self.candidate_yoe = calculate_yoe(career_start)
         self.max_allowed_yoe = get_max_allowed_yoe(career_start)
-        self._model = None
         self.quota_exhausted = False
 
-    def _get_model(self):
-        """Lazy-initialize the Gemini model."""
-        if self._model is None:
-            import google.generativeai as genai
+    def _get_model(self, model_name: str = None):
+        """Initialize the Gemini model."""
+        import google.generativeai as genai
 
-            api_key = os.getenv("GEMINI_API_KEY")
-            if not api_key:
-                raise ValueError(
-                    "GEMINI_API_KEY environment variable not set. "
-                    "Get one from https://aistudio.google.com/app/apikey"
-                )
-            genai.configure(api_key=api_key)
-            self._model = genai.GenerativeModel(self.model_name)
-        return self._model
+        name = model_name or self.model_name
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY environment variable not set. "
+                "Get one from https://aistudio.google.com/app/apikey"
+            )
+        genai.configure(api_key=api_key)
+        return genai.GenerativeModel(name)
 
     async def score_job(
         self,
@@ -259,8 +258,16 @@ class JobScorer:
 
                 if is_rate_limit:
                     if is_daily:
-                        self.quota_exhausted = True
-                        logger.error(f"[Scorer] Daily quota exceeded for model '{self.model_name}': {e}. Halting scoring phase.")
+                        if self.model_name != self.fallback_model:
+                            logger.warning(
+                                f"[Scorer] Daily quota reached for '{self.model_name}'. "
+                                f"Failing over to fallback model '{self.fallback_model}'..."
+                            )
+                            self.model_name = self.fallback_model
+                            continue
+                        else:
+                            self.quota_exhausted = True
+                            logger.error(f"[Scorer] Daily quota exceeded for both primary and fallback models: {e}. Halting scoring phase.")
                     else:
                         logger.error(f"[Scorer] Rate limit exceeded after retries for {company}/{title}: {e}")
                 else:
