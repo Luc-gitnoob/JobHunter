@@ -99,8 +99,8 @@ async def _search_hunter(company_name: str, domain: Optional[str], api_key: str)
     url = "https://api.hunter.io/v2/domain-search"
     params = {
         "api_key": api_key,
-        "department": "engineering",
-        "limit": 5,
+        "type": "personal",
+        "limit": 10,
     }
     if target_domain:
         params["domain"] = target_domain
@@ -110,13 +110,16 @@ async def _search_hunter(company_name: str, domain: Optional[str], api_key: str)
     async with httpx.AsyncClient(timeout=15.0) as client:
         resp = await client.get(url, params=params)
         if resp.status_code != 200:
-            logger.debug(f"[EmailFinder] Hunter.io returned status {resp.status_code}: {resp.text}")
+            logger.warning(f"[EmailFinder] Hunter.io returned status {resp.status_code}: {resp.text}")
             return []
 
         data = resp.json().get("data", {})
         raw_emails = data.get("emails", [])
 
-        results = []
+        engineering_keywords = ["software", "engineer", "developer", "backend", "tech", "architect", "lead", "manager", "recruiter", "talent"]
+        engineering_contacts = []
+        other_contacts = []
+
         for item in raw_emails:
             email = item.get("value")
             if not email:
@@ -132,16 +135,23 @@ async def _search_hunter(company_name: str, domain: Optional[str], api_key: str)
             if confidence and confidence < 50:
                 continue
 
-            results.append({
+            contact = {
                 "name": full_name,
                 "first_name": first_name or "there",
                 "email": email,
                 "title": title,
                 "source": "hunter",
                 "confidence": confidence,
-            })
+            }
 
-        return results
+            title_lower = title.lower()
+            dept_lower = (item.get("department") or "").lower()
+            if any(k in title_lower for k in engineering_keywords) or dept_lower in ["it", "engineering"]:
+                engineering_contacts.append(contact)
+            else:
+                other_contacts.append(contact)
+
+        return engineering_contacts or other_contacts
 
 
 async def _search_apollo(company_name: str, domain: Optional[str], api_key: str) -> list[dict]:
