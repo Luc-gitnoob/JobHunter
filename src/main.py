@@ -514,8 +514,8 @@ async def run_poll_cycle(all_config: dict):
 
     # Score distribution & calibration breakdown
     if scored_jobs_stats:
-        tier_80_plus = [j for j in scored_jobs_stats if j["score"] >= 80]
-        tier_70_79 = [j for j in scored_jobs_stats if 70 <= j["score"] < 80]
+        tier_passing = [j for j in scored_jobs_stats if j["score"] >= min_score]
+        tier_marginal = [j for j in scored_jobs_stats if 70 <= j["score"] < min_score]
         tier_60_69 = [j for j in scored_jobs_stats if 60 <= j["score"] < 70]
         tier_40_59 = [j for j in scored_jobs_stats if 40 <= j["score"] < 60]
         tier_below_40 = [j for j in scored_jobs_stats if j["score"] < 40]
@@ -523,31 +523,23 @@ async def run_poll_cycle(all_config: dict):
         logger.info("\n" + "=" * 70)
         logger.info(f"📊 SCORE CALIBRATION REPORT (Threshold: {min_score})")
         logger.info(f"Total jobs scored this cycle: {len(scored_jobs_stats)}")
-        logger.info(f"  • Score 80-100 (Exceptional match):            {len(tier_80_plus):2d} jobs")
-        logger.info(f"  • Score 70-79  (Passing match - dispatched):   {len(tier_70_79):2d} jobs")
+        logger.info(f"  • Score >={min_score} (Dispatched matches):          {len(tier_passing):2d} jobs")
+        logger.info(f"  • Score 70-{min_score-1} (Filtered near-threshold):      {len(tier_marginal):2d} jobs")
         logger.info(f"  • Score 60-69  (Borderline / Close match):      {len(tier_60_69):2d} jobs")
         logger.info(f"  • Score 40-59  (Moderate / Tech fit, mid-tier): {len(tier_40_59):2d} jobs")
         logger.info(f"  • Score <40    (Disqualified / YOE or Agency):  {len(tier_below_40):2d} jobs")
         logger.info("-" * 70)
-        logger.info(f"Borderline Jobs (Score 60-69) — Would pass if threshold was lowered to 60/65:")
-        if tier_60_69:
-            for idx, j in enumerate(tier_60_69, 1):
+        logger.info(f"Filtered Near-Threshold Jobs (Score 70-{min_score-1}):")
+        if tier_marginal:
+            for idx, j in enumerate(tier_marginal, 1):
                 logger.info(f"  {idx}. [{j['score']}/100] {j['company']} — {j['title']} ({j['location']})")
                 logger.info(f"     Reason: {j['summary']}")
         else:
             logger.info("  (None in this range)")
         logger.info("-" * 70)
-        logger.info(f"Marginal Passing Jobs (Score 70-79) — Would be filtered out if threshold is increased to 80:")
-        if tier_70_79:
-            for idx, j in enumerate(tier_70_79, 1):
-                logger.info(f"  {idx}. [{j['score']}/100] {j['company']} — {j['title']} ({j['location']})")
-                logger.info(f"     Reason: {j['summary']}")
-        else:
-            logger.info("  (None in this range)")
-        logger.info("-" * 70)
-        logger.info(f"Top-Tier High Confidence Jobs (Score 80-100):")
-        if tier_80_plus:
-            for idx, j in enumerate(tier_80_plus, 1):
+        logger.info(f"High Confidence Dispatched Jobs (Score >={min_score}):")
+        if tier_passing:
+            for idx, j in enumerate(tier_passing, 1):
                 logger.info(f"  {idx}. [{j['score']}/100] {j['company']} — {j['title']} ({j['location']})")
                 logger.info(f"     Reason: {j['summary']}")
         else:

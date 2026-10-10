@@ -206,7 +206,7 @@ filters:
 
 # LLM Scoring
 scoring:
-  min_score: 80                   # Top-tier product match threshold (filters out marginal fullstack/AWS roles)
+  min_score: 85                   # High-caliber benchmark: Top-tier product unicorns, FAANG, & Tier-1 GCCs (>= 18 LPA)
   model: "gemini-3.5-flash-lite"  # High free tier quota (hundreds of requests/day) vs 20 RPD cap on full 3.6 flash
   temperature: 0.3                # Low temp for consistent scoring
 

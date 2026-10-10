@@ -50,7 +50,8 @@ Evaluate how well this candidate matches this job posting in the following stric
    The candidate is an SDE at NAV Fund Services targeting high-tier product engineering roles paying >= 18 LPA INR (or $25k+ USD for remote roles).
    - REJECT NON-ENGINEERING / OPERATIONS (match_score < 30): The candidate is strictly seeking core software engineering, backend, platform, or distributed systems roles. Strictly REJECT non-engineering roles such as Risk Management, AML, Compliance, Operations, Fraud Analyst, or Business Analysis with match_score < 30, even if posted by a top-tier fintech.
    - REJECT CONTRACTOR NETWORKS & STAFFING (match_score < 40): Freelancer networks (e.g. Flexiple, Toptal), IT service consultancies, bodyshops, or staffing agencies must be rejected with match_score < 40.
-   - EXCELLENT FIT (Score boost): Direct product-based tech companies, high-growth VC-backed tech startups, unicorns, quantitative trading / hedge funds, high-scale fintechs, and tier-1 MNC engineering centers (archetypes include: Google, Uber, Atlassian, Microsoft, Stripe, Tower Research, D. E. Shaw, Amazon, Salesforce, Adobe, PhonePe, Flipkart, Razorpay, CRED, Swiggy, Groww, Juspay, Intuit, ServiceNow, OCI, BrowserStack, Zepto, Meta, Databricks, Rubrik, Cloudflare, NVIDIA, Cohesity, Nutanix, Arcesium, Goldman Sachs, Morgan Stanley, PayPal, Twilio, Postman, Zeta, Zomato, Meesho, Sprinklr, Walmart Global Tech, Tekion, Coinbase, or ANY startup/company with a similar high-bar product engineering culture paying >= 18 LPA).
+   - REJECT UNVERIFIED / TRADITIONAL IT SHOPS & LOW-PAYING FIRMS (match_score <= 65): If the employer is an obscure IT firm, traditional IT consultancy, regional software vendor, or small unverified business that does NOT have an established market reputation of paying >= 18 LPA (or where compensation cannot be reliably verified as >= 18 LPA, e.g. Nippon Data Systems, Harisan, Scoutit, Advance Sensing, SpaceBasic, etc.), you MUST cap the score at <= 65, even if the tech stack and YOE align. DO NOT give >= 85 to unverified small IT shops or non-top-tier enterprise vendors.
+   - EXCELLENT FIT (Score >= 85): Direct product-based tech companies, high-growth VC-backed tech startups, unicorns, quantitative trading / hedge funds, high-scale fintechs, and tier-1 MNC engineering centers (archetypes include: Google, Uber, Atlassian, Microsoft, Stripe, Tower Research, D. E. Shaw, Amazon, Salesforce, Adobe, PhonePe, Flipkart, Razorpay, CRED, Swiggy, Groww, Juspay, Intuit, ServiceNow, OCI, BrowserStack, Zepto, Meta, Databricks, Rubrik, Cloudflare, NVIDIA, Cohesity, Nutanix, Arcesium, Goldman Sachs, Morgan Stanley, PayPal, Twilio, Postman, Zeta, Zomato, Meesho, Sprinklr, Walmart Global Tech, Tekion, Coinbase, Apple, Citi, DTCC, Docusign, Amgen, or ANY recognized tech center/startup with a similar high-bar product engineering culture paying >= 18 LPA).
 
 3. [PRIORITY 3 - MEDIUM] Technical Stack Alignment:
    Alignment with candidate core technologies: Golang, C#/.NET, Java/Spring Boot, Python, SQL, Docker, Kubernetes, microservices, Kafka, Redis, and distributed systems.
@@ -228,6 +229,22 @@ class JobScorer:
                                 f"Detected disqualified archetype ('{ind}')."
                             )
                             result["match_score"] = 30
+                            break
+
+                    # Safety clamp: if summary indicates unverified compensation or traditional IT shop
+                    unverified_comp_indicators = [
+                        "compensation tier cannot be strictly verified",
+                        "cannot be strictly verified",
+                        "rather than a top-tier product",
+                        "enterprise software company rather than",
+                    ]
+                    for ind in unverified_comp_indicators:
+                        if ind in summary_lower:
+                            logger.warning(
+                                f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                                f"Detected unverified compensation tier in summary ('{ind}')."
+                            )
+                            result["match_score"] = 65
                             break
 
                 logger.info(
