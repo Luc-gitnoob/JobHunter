@@ -72,7 +72,7 @@ class TelegramNotifier:
 
         # Build Google X-Ray search URL for zero-search-limit LinkedIn discovery
         # Prioritizes college alumni, peer backend engineers, and engineering managers in India.
-        xray_query = f'site:linkedin.com/in "{company}" ("Software Engineer" OR "Engineering Manager" OR "IET") India'
+        xray_query = f'site:linkedin.com/in "{company}" ("Software Engineer" OR "Engineering Manager" OR "IIIT Kota") India'
         referrer_search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(xray_query)}"
 
         reply_markup = {
@@ -87,8 +87,8 @@ class TelegramNotifier:
         # Compact connection note for LinkedIn's 300-char "Add a note" limit
         skills_short = ", ".join(matching_skills[:3]) if matching_skills else "backend systems"
         connect_note = (
-            f"Hi, I'm an SDE at NAV Fund Services. I saw {company}'s {title} role and love your backend engineering work! "
-            f"Given my hands-on background in {skills_short}, would you be open to connecting for a quick referral? Thanks!"
+            f"Hi, I'm an SDE at NAV Fund Services. I saw {company}'s {title} opening and my background in {skills_short} is a strong fit. "
+            f"Could you please submit a referral for me for this role? I have my resume ready to share. Thanks! - Salil"
         )
 
         # Build the message
@@ -223,22 +223,21 @@ def generate_referral_message(
     matching_skills: list[str],
 ) -> str:
     """
-    Generate a referral request message that Salil can copy-paste
-    when reaching out to an engineer/alumnus at the company.
+    Generate a direct referral request message that Salil can copy-paste
+    when reaching out to an engineer or hiring team at the company.
     """
-    skills_highlight = ", ".join(matching_skills[:5])
+    skills_highlight = ", ".join(matching_skills[:5]) if matching_skills else "distributed systems and backend microservices"
 
     message = (
-        f"Hi, I hope you’re doing well. "
-        f"I’m currently working as a Software Development Engineer at NAV Fund Services. "
-        f"I came across the {title} role at {company} and wanted to reach out.\n\n"
-        f"My background is a close fit: I have hands-on experience with "
-        f"{skills_highlight}, building high-throughput backend services and infrastructure "
-        f"supporting 60+ hedge fund clients.\n\n"
-        f"Here is the role link: {apply_url}\n\n"
-        f"Would you be open to passing along a referral for this opening? "
-        f"I've attached my resume, and I'd be happy to chat or provide any details needed.\n\n"
-        f"Thanks for considering!"
+        f"Hi, I hope you're doing well.\n\n"
+        f"I'm currently working as a Software Development Engineer at NAV Fund Services (ex-Gap Inc.), "
+        f"specializing in backend systems and distributed infrastructure.\n\n"
+        f"I came across the {title} opening at {company} and my experience with "
+        f"{skills_highlight} is a strong match for what the team is building.\n\n"
+        f"Role Link: {apply_url}\n\n"
+        f"Could you please submit a referral for me for this opening? "
+        f"I've attached my resume for your review. Please let me know if you need any additional details to submit the referral.\n\n"
+        f"Thanks for your time and help!"
     )
 
     return message
