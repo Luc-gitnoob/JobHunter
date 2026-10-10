@@ -426,6 +426,7 @@ async def run_poll_cycle(all_config: dict):
         return
 
     high_matches_dispatched = 0
+    scored_jobs_stats = []
     for db_job in unscored_jobs:
         if getattr(scorer, "quota_exhausted", False):
             logger.warning("  [LLM] Daily quota reached. Skipping remaining unscored jobs until next cycle.")
@@ -461,24 +462,35 @@ async def run_poll_cycle(all_config: dict):
                 break
 
             if score_result:
+                score = score_result["match_score"]
+                summary = score_result.get("summary", "")
+                scored_jobs_stats.append({
+                    "company": db_job.company_name,
+                    "title": db_job.title,
+                    "location": db_job.location or "",
+                    "score": score,
+                    "summary": summary,
+                })
+
                 async with AsyncSessionLocal() as session:
                     from sqlalchemy import update
                     await session.execute(
                         update(Job)
                         .where(Job.id == db_job.id)
                         .values(
-                            match_score=score_result["match_score"],
+                            match_score=score,
                             match_analysis=json.dumps(score_result),
                             status="scored",
                         )
                     )
                     await session.commit()
 
-                if score_result["match_score"] >= min_score:
+                if score >= min_score:
                     high_matches_dispatched += 1
                     logger.info(
-                        f"  ⭐ HIGH MATCH ({score_result['match_score']}/100): "
-                        f"{db_job.company_name} — {db_job.title}. Dispatching notification..."
+                        f"  ⭐ [PASS {score}/100 >= {min_score}] "
+                        f"{db_job.company_name} — {db_job.title}\n"
+                        f"     Match Analysis: {summary}"
                     )
                     await _notify_job_alert(
                         db_job=db_job,
@@ -486,12 +498,54 @@ async def run_poll_cycle(all_config: dict):
                         notifier=notifier,
                         profile=profile,
                     )
+                else:
+                    status_label = "DISQUALIFIED" if score < 40 else "BELOW THRESHOLD"
+                    logger.info(
+                        f"  ⚪ [{status_label} {score}/100 < {min_score}] "
+                        f"{db_job.company_name} — {db_job.title}\n"
+                        f"     Match Analysis: {summary}"
+                    )
 
         except Exception as e:
             logger.error(f"  Scoring error for {db_job.company_name}/{db_job.title}: {e}")
 
         # Rate limit Gemini calls (safe for Free Tier RPM)
         await asyncio.sleep(4)
+
+    # Score distribution & calibration breakdown
+    if scored_jobs_stats:
+        tier_80_plus = [j for j in scored_jobs_stats if j["score"] >= 80]
+        tier_70_79 = [j for j in scored_jobs_stats if 70 <= j["score"] < 80]
+        tier_60_69 = [j for j in scored_jobs_stats if 60 <= j["score"] < 70]
+        tier_40_59 = [j for j in scored_jobs_stats if 40 <= j["score"] < 60]
+        tier_below_40 = [j for j in scored_jobs_stats if j["score"] < 40]
+
+        logger.info("\n" + "=" * 70)
+        logger.info(f"📊 SCORE CALIBRATION REPORT (Threshold: {min_score})")
+        logger.info(f"Total jobs scored this cycle: {len(scored_jobs_stats)}")
+        logger.info(f"  • Score 80-100 (Exceptional match):            {len(tier_80_plus):2d} jobs")
+        logger.info(f"  • Score 70-79  (Passing match - dispatched):   {len(tier_70_79):2d} jobs")
+        logger.info(f"  • Score 60-69  (Borderline / Close match):      {len(tier_60_69):2d} jobs")
+        logger.info(f"  • Score 40-59  (Moderate / Tech fit, mid-tier): {len(tier_40_59):2d} jobs")
+        logger.info(f"  • Score <40    (Disqualified / YOE or Agency):  {len(tier_below_40):2d} jobs")
+        logger.info("-" * 70)
+        logger.info(f"Borderline Jobs (Score 60-69) — Would pass if threshold was lowered to 60:")
+        if tier_60_69:
+            for idx, j in enumerate(tier_60_69, 1):
+                logger.info(f"  {idx}. [{j['score']}/100] {j['company']} — {j['title']} ({j['location']})")
+                logger.info(f"     Reason: {j['summary']}")
+        else:
+            logger.info("  (None in this range)")
+        logger.info("-" * 70)
+        logger.info(f"Passing Jobs (Score >= {min_score}) — Dispatched to Telegram:")
+        passing_jobs = [j for j in scored_jobs_stats if j["score"] >= min_score]
+        if passing_jobs:
+            for idx, j in enumerate(passing_jobs, 1):
+                logger.info(f"  {idx}. [{j['score']}/100] {j['company']} — {j['title']} ({j['location']})")
+                logger.info(f"     Reason: {j['summary']}")
+        else:
+            logger.info("  (No jobs passed the current threshold)")
+        logger.info("=" * 70 + "\n")
 
     total_alerts = len(unnotified_jobs) + high_matches_dispatched
     logger.info(f"Cycle completed. High-match jobs dispatched: {total_alerts}")

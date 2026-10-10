@@ -209,7 +209,7 @@ class JobScorer:
                     )
 
             logger.info(
-                f"[Scorer] {company} — {title}: score={result['match_score']}"
+                f"[Scorer] {company} — {title}: score={result['match_score']}/100 | {result.get('summary', '')}"
             )
             return result
 
