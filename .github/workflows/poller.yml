@@ -1,8 +1,8 @@
 name: JobHunter Automated Poller
 
 on:
-  workflow_dispatch: # Triggered via GitHub API / cron-job.org webhook or manual button
-
+  workflow_dispatch: 
+    
 permissions:
   contents: read
 

@@ -45,6 +45,38 @@ def get_max_allowed_yoe(start_date_str: str = "2025-01", as_of: Optional[datetim
     return int(yoe) + 1
 
 
+# Canonical city aliases for interchangeable ATS location matching
+CITY_ALIASES = {
+    "bangalore": {"bangalore", "bengaluru"},
+    "bengaluru": {"bangalore", "bengaluru"},
+    "gurgaon": {"gurgaon", "gurugram"},
+    "gurugram": {"gurgaon", "gurugram"},
+    "mumbai": {"mumbai", "bombay"},
+    "bombay": {"mumbai", "bombay"},
+    "chennai": {"chennai", "madras"},
+    "madras": {"chennai", "madras"},
+    "kolkata": {"kolkata", "calcutta"},
+    "calcutta": {"kolkata", "calcutta"},
+    "delhi": {"delhi", "new delhi", "ncr", "delhi ncr"},
+    "new delhi": {"delhi", "new delhi", "ncr", "delhi ncr"},
+}
+
+INDIAN_TECH_HUBS = {
+    "bangalore", "bengaluru", "hyderabad", "pune", "gurgaon", "gurugram",
+    "noida", "delhi", "new delhi", "mumbai", "chennai", "kolkata", "ahmedabad", "kochi",
+}
+
+NON_INDIA_REGIONS = [
+    "united states", "usa", "u.s.", "u.s.a.", "us",
+    "canada", "united kingdom", "uk", "u.k.", "london",
+    "germany", "berlin", "france", "paris", "netherlands", "amsterdam",
+    "ireland", "dublin", "poland", "spain", "madrid", "barcelona",
+    "australia", "sydney", "melbourne", "brazil", "sao paulo",
+    "mexico", "singapore", "japan", "tokyo", "emea", "latam",
+    "americas", "north america", "europe", "san francisco", "new york", "seattle",
+]
+
+
 class PreFilter:
     """
     Rule-based pre-filter for job postings.
@@ -117,13 +149,40 @@ class PreFilter:
         # 4. Geographic filter (if provided per-company)
         if geo_filter and job.location:
             location_lower = job.location.lower()
-            is_geo_match = any(geo.lower() in location_lower for geo in geo_filter)
-            if not is_geo_match and "remote" in location_lower:
-                is_geo_match = True
-            if not is_geo_match and any(g.lower() == "india" for g in geo_filter):
-                indian_hubs = {"bangalore", "bengaluru", "hyderabad", "pune", "gurgaon", "gurugram", "noida", "delhi", "mumbai", "chennai"}
-                if any(hub in location_lower for hub in indian_hubs):
+
+            # Expand target geo_filter with interchangeable city aliases
+            expanded_geos = set()
+            for g in geo_filter:
+                g_str = g.strip().lower()
+                expanded_geos.add(g_str)
+                if g_str in CITY_ALIASES:
+                    expanded_geos.update(CITY_ALIASES[g_str])
+
+            is_geo_match = False
+
+            # Check direct city or region match (excluding remote for dedicated handling)
+            for target_geo in expanded_geos:
+                if target_geo != "remote" and target_geo in location_lower:
                     is_geo_match = True
+                    break
+
+            # If India is in the filter, any Indian tech hub matches
+            if not is_geo_match and "india" in expanded_geos:
+                if "india" in location_lower or any(hub in location_lower for hub in INDIAN_TECH_HUBS):
+                    is_geo_match = True
+
+            # Remote matching and sanitization
+            if not is_geo_match and "remote" in location_lower:
+                # Disqualify remote roles restricted to non-India locations (e.g. Remote - US, Remote (UK), etc.)
+                has_non_india_restriction = any(
+                    re.search(rf"\b{re.escape(reg)}\b", location_lower)
+                    for reg in NON_INDIA_REGIONS
+                )
+                has_explicit_india = "india" in location_lower or any(hub in location_lower for hub in INDIAN_TECH_HUBS)
+
+                if has_explicit_india or (not has_non_india_restriction and "remote" in expanded_geos):
+                    is_geo_match = True
+
             if not is_geo_match:
                 return False, f"Location '{job.location}' not in geo filter: {geo_filter}"
 

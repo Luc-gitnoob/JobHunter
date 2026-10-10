@@ -85,7 +85,6 @@ SOURCES = {
     "lever": LeverSource,
     "ashby": AshbySource,
     "smartrecruiters": SmartRecruitersSource,
-    "amazon": AmazonSource,
 }
 
 
@@ -238,7 +237,18 @@ async def run_poll_cycle(all_config: dict):
             # Rate limiting between companies
             await asyncio.sleep(delay)
 
-    # --- Phase 1b: JobSpy fallback searches ---
+        # --- Phase 1b: Dedicated Amazon Jobs API poller ---
+        try:
+            amazon_source = AmazonSource(client=client)
+            amazon_jobs = await amazon_source.fetch_jobs(company_name="Amazon")
+            for job in amazon_jobs:
+                job.raw_data["_geo_filter"] = ["India", "Bangalore", "Bengaluru", "Hyderabad", "Pune", "Remote"]
+            all_raw_jobs.extend(amazon_jobs)
+            logger.info(f"  [amazon.jobs] Amazon: {len(amazon_jobs)} raw postings")
+        except Exception as e:
+            logger.error(f"  [amazon.jobs] Error fetching jobs: {e}")
+
+    # --- Phase 1c: JobSpy fallback searches ---
     jobspy_source = JobSpySource()
     for search in companies_config.get("jobspy_searches", []):
         try:
@@ -254,7 +264,7 @@ async def run_poll_cycle(all_config: dict):
         except Exception as e:
             logger.error(f"  [jobspy] Search '{search.get('search_term')}': ERROR — {e}")
 
-    # --- Phase 1c: Instahyre targeted searches ---
+    # --- Phase 1d: Instahyre targeted searches ---
     instahyre_source = InstahyreSource()
     for search in companies_config.get("instahyre_searches", []):
         try:

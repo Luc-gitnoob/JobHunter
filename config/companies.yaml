@@ -1,7 +1,7 @@
 # ============================================================
 # Target Company Catalog
 # Add companies you want to monitor here.
-# Each entry needs: name, ats_platform, ats_slug
+# Each entry needs: name, ats_platform, ats_slug, priority, geo_filter
 #
 # ATS platforms supported: greenhouse, lever, ashby, smartrecruiters
 # The slug is found in the company's careers page URL:
@@ -12,226 +12,195 @@
 # ============================================================
 
 companies:
-  # === Tier 1: Top Tech / Quant / AI (Greenhouse) ===
-  - name: Stripe
+  # === Tier 1: Quant Trading & High-Frequency Systems (Greenhouse) ===
+  - name: Graviton Research Capital
     ats_platform: greenhouse
-    ats_slug: stripe
+    ats_slug: gravitonresearchcapital
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
+    geo_filter: ["Gurgaon", "Gurugram"]
 
-  - name: Coinbase
+  - name: AlphaGrep Securities
     ats_platform: greenhouse
-    ats_slug: coinbase
+    ats_slug: alphagrepsecurities
     priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Cloudflare
-    ats_platform: greenhouse
-    ats_slug: cloudflare
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Datadog
-    ats_platform: greenhouse
-    ats_slug: datadog
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Figma
-    ats_platform: greenhouse
-    ats_slug: figma
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Discord
-    ats_platform: greenhouse
-    ats_slug: discord
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Anthropic
-    ats_platform: greenhouse
-    ats_slug: anthropic
-    priority: 1
-    geo_filter: ["India", "Remote"]
+    geo_filter: ["Bangalore", "Bengaluru", "Mumbai"]
 
   - name: Tower Research Capital
     ats_platform: greenhouse
     ats_slug: towerresearchcapital
     priority: 1
-    geo_filter: ["India", "Gurgaon", "Remote"]
+    geo_filter: ["Gurgaon", "Gurugram", "India"]
 
-  - name: Jane Street
+  # === Tier 1: Cloud, Distributed Systems & Top Tech (Greenhouse) ===
+  - name: Stripe
     ats_platform: greenhouse
-    ats_slug: janestreet
+    ats_slug: stripe
     priority: 1
-    geo_filter: ["India", "Remote"]
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
 
   - name: Rubrik
     ats_platform: greenhouse
     ats_slug: rubrik
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: Reddit
-    ats_platform: greenhouse
-    ats_slug: reddit
-    priority: 2
-    geo_filter: ["India", "Remote"]
-
-  - name: Brex
-    ats_platform: greenhouse
-    ats_slug: brex
-    priority: 2
-    geo_filter: ["India", "Remote"]
-
-  # === Tier 1: Modern Tech & AI (Ashby) ===
-  - name: Notion
-    ats_platform: ashby
-    ats_slug: notion
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Ramp
-    ats_platform: ashby
-    ats_slug: ramp
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Linear
-    ats_platform: ashby
-    ats_slug: linear
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: Perplexity
-    ats_platform: ashby
-    ats_slug: perplexity
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  - name: OpenAI
-    ats_platform: ashby
-    ats_slug: openai
-    priority: 1
-    geo_filter: ["India", "Remote"]
-
-  # === Tier 2: Crypto & Fintech (Lever) ===
-  - name: Kraken
-    ats_platform: lever
-    ats_slug: kraken
-    priority: 2
-    geo_filter: ["India", "Remote"]
-
-  # === Tier 2: Global Tech & Mobility (SmartRecruiters) ===
-  - name: Bosch Group
-    ats_platform: smartrecruiters
-    ats_slug: BoschGroup
-    priority: 2
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: Delivery Hero
-    ats_platform: smartrecruiters
-    ats_slug: deliveryhero
-    priority: 2
-    geo_filter: ["India", "Remote"]
-
-  # === Tier 2: Top Indian Product & Fintech (Greenhouse & Lever) ===
-  - name: Groww
-    ats_platform: greenhouse
-    ats_slug: groww
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: CRED
-    ats_platform: lever
-    ats_slug: cred
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: InMobi
-    ats_platform: greenhouse
-    ats_slug: inmobi
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: Swiggy
-    ats_platform: smartrecruiters
-    ats_slug: swiggy
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Bengaluru", "Remote"]
-
-  - name: Razorpay
-    ats_platform: greenhouse
-    ats_slug: razorpaysoftwareprivatelimited
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
-
-  - name: Amazon
-    ats_platform: amazon
-    ats_slug: amazon
-    priority: 1
-    geo_filter: ["India", "Bangalore", "Bengaluru", "Hyderabad", "Pune", "Remote"]
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
 
   - name: Databricks
     ats_platform: greenhouse
     ats_slug: databricks
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
+
+  - name: Cloudflare
+    ats_platform: greenhouse
+    ats_slug: cloudflare
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
+
+  - name: Datadog
+    ats_platform: greenhouse
+    ats_slug: datadog
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
 
   - name: MongoDB
     ats_platform: greenhouse
     ats_slug: mongodb
     priority: 1
-    geo_filter: ["India", "Bangalore", "Gurgaon", "Remote"]
+    geo_filter: ["India", "Bangalore", "Bengaluru", "Gurgaon", "Gurugram"]
 
   - name: Twilio
     ats_platform: greenhouse
     ats_slug: twilio
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
+
+  - name: Coinbase
+    ats_platform: greenhouse
+    ats_slug: coinbase
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Bengaluru"]
+
+  - name: Postman
+    ats_platform: greenhouse
+    ats_slug: postman
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru", "Remote"]
+
+  - name: Urban Company
+    ats_platform: greenhouse
+    ats_slug: urbancompany
+    priority: 1
+    geo_filter: ["Gurgaon", "Gurugram", "Bangalore", "Bengaluru"]
+
+  # === Tier 1: Top Indian Product & Fintech (Greenhouse) ===
+  - name: Groww
+    ats_platform: greenhouse
+    ats_slug: groww
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  - name: Razorpay
+    ats_platform: greenhouse
+    ats_slug: razorpaysoftwareprivatelimited
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  - name: InMobi
+    ats_platform: greenhouse
+    ats_slug: inmobi
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
 
   - name: Druva
     ats_platform: greenhouse
     ats_slug: druva
     priority: 1
-    geo_filter: ["India", "Pune", "Remote"]
+    geo_filter: ["India", "Pune"]
 
   - name: slice
     ats_platform: greenhouse
     ats_slug: slice
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  # === Tier 1 & 2: Top Product & Fintech (Lever) ===
+  - name: Rippling
+    ats_platform: lever
+    ats_slug: rippling
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  - name: Zeta
+    ats_platform: lever
+    ats_slug: zeta
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru", "Mumbai"]
+
+  - name: Juspay
+    ats_platform: lever
+    ats_slug: juspay
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  - name: CRED
+    ats_platform: lever
+    ats_slug: cred
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
 
   - name: Meesho
     ats_platform: lever
     ats_slug: meesho
     priority: 1
-    geo_filter: ["India", "Bangalore", "Remote"]
+    geo_filter: ["Bangalore", "Bengaluru"]
+
+  # === Tier 1: Top Product & SaaS (SmartRecruiters) ===
+  - name: Swiggy
+    ats_platform: smartrecruiters
+    ats_slug: swiggy
+    priority: 1
+    geo_filter: ["Bangalore", "Bengaluru"]
 
   - name: Freshworks
     ats_platform: smartrecruiters
     ats_slug: freshworks
     priority: 1
-    geo_filter: ["India", "Chennai", "Bangalore", "Remote"]
+    geo_filter: ["India", "Chennai", "Bangalore", "Bengaluru"]
 
 # ============================================================
 # python-jobspy Targeted Searches
-# For top tech companies without public Greenhouse/Lever/Ashby/SmartRecruiters APIs
-# (e.g., Flipkart, PhonePe, Zerodha, Atlassian, Postman)
+# For Tier-1 employers with proprietary/enterprise ATS systems
+# (Workday, Taleo, iCIMS, Internal)
 # ============================================================
 jobspy_searches:
+  # Tier-1 Enterprise & Cloud ATS Targets (Workday / Taleo / Proprietary)
+  - search_term: "Amazon SDE 1"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 20
+
+  - search_term: "Google Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 20
+
+  - search_term: "Microsoft Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 20
+
+  - search_term: "Oracle Cloud Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  # High-Yield Indian Product & Unicorn Targets
   - search_term: "Flipkart Software Engineer"
     location: "India"
     sites: ["linkedin"]
     results_wanted: 20
 
   - search_term: "PhonePe Software Engineer"
-    location: "India"
-    sites: ["linkedin"]
-    results_wanted: 15
-
-  - search_term: "Postman Software Engineer"
     location: "India"
     sites: ["linkedin"]
     results_wanted: 15
@@ -256,7 +225,7 @@ jobspy_searches:
     sites: ["linkedin"]
     results_wanted: 15
 
-  # Selective fallback searches for high-scale backend roles
+  # Selective fallback searches for early-career backend roles
   - search_term: "SDE 1 Backend"
     location: "India"
     sites: ["linkedin"]
@@ -289,4 +258,3 @@ instahyre_searches:
     skills: ["Golang", "Java", "Python"]
     locations: ["Bangalore", "Hyderabad", "Pune", "Gurgaon", "Work From Home"]
     results_wanted: 20
-

@@ -1,19 +1,19 @@
 # ============================================================
 # Candidate Profile — Ground Truth & Portfolio
 # Single source of truth for Salil's background.
-# The LLM scorer and resume tailor read from this file.
+# The LLM scorer and referral generator read from this file.
 # ============================================================
 
 name: Salil Vaidya
 email: salilvaidya003@gmail.com
 phone: "+91-9082854061"
-linkedin: "https://www.linkedin.com/in/salil-v-69713b319/"
+linkedin: "https://linkedin.com/in/salil-v"
 github: "https://github.com/Luc-gitnoob"
 portfolio: ""
 career_start_date: "2025-01" # Full-time software engineering career start (Jan 2025)
 
 education:
-  - institution: IIIT Kota
+  - institution: "Indian Institute of Information Technology (IIIT), Kota"
     degree: B.Tech in Electronics and Communication Engineering (ECE)
     duration: "2021 – 2025"
     cgpa: "8.00"
@@ -27,23 +27,23 @@ experience:
       - Golang
       - C#
       - ".NET 10"
+      - Java
       - Docker
       - Kubernetes
       - SQL Server
       - Redis
-      - Kafka
       - ELK Stack
       - HashiCorp Vault
       - Kerberos
-      - Azure DevOps
+      - Azure Active Directory
+      - Playwright
+      - Jest
     highlights:
-      - "Architected and engineered enterprise authentication & SSO microservices in Golang with Kerberos SPNEGO, TOTP-based MFA, and HashiCorp Vault dynamic secret rotation across 50+ distributed microservices."
-      - "Modernized legacy monolithic .NET Framework services to asynchronous .NET 10 microservices with gRPC and REST APIs, boosting throughput by 4.5x and slashing p99 latency from 320ms to 45ms for 20+ hedge funds."
-      - "Engineered high-throughput event processing and caching pipelines using Kafka and Redis, processing 15M+ daily transaction records across 444+ production tenant configurations."
-      - "Designed automated Kubernetes deployments leveraging multi-stage Docker builds, horizontal pod autoscaling (HPA), and blue-green rollouts within Azure DevOps CI/CD pipelines."
-      - "Implemented full-stack distributed tracing and observability using the ELK stack and Prometheus, building dual-channel alerting and cache-based rate limiting for the Elsa 3 workflow engine."
-      - "Optimized SQL Server database performance through query plan analysis, composite indexing, and connection pooling, reducing database lock contention by 60%."
-      - "Authored 500+ unit and Playwright E2E integration test suites, elevating test coverage to 88% and ensuring zero-regression deployment cycles."
+      - "Led modernization of legacy monolithic services into scalable RESTful microservices, maintaining full backward compatibility for 62+ hedge fund clients across 484+ configurations, boosting throughput by 4.5x."
+      - "Engineered an enterprise authentication platform in Golang implementing Kerberos SPNEGO SSO, TOTP multi-factor authentication, and HashiCorp Vault dynamic secret rotation to centralize distributed access."
+      - "Containerized backend services using multi-stage Docker builds and deployed to high-availability Kubernetes clusters with rolling updates, autoscaling, and enterprise Kerberos verification."
+      - "Engineered production observability with the ELK stack and correlation-based distributed tracing; implemented dual-channel alerting with cache-based rate limiting for the Elsa 3 workflow engine."
+      - "Automated enterprise user provisioning via Azure Active Directory (Microsoft Graph APIs); expanded RBAC approval workflows in .NET and SQL Server, and established test suites across Jest and Playwright in CI/CD."
 
   - company: Gap Inc.
     title: Software Development Intern
@@ -53,29 +53,14 @@ experience:
       - Java
       - Spring Boot
       - Azure Data Factory
-      - PostgreSQL
-      - Redis
       - REST APIs
     highlights:
-      - "Engineered scalable ETL data pipelines using Azure Data Factory and Spring Boot, processing 5M+ daily retail inventory and catalog records across distributed cloud nodes."
-      - "Optimized batch data ingestion and PostgreSQL indexing routines, reducing pipeline runtime by 35% and eliminating data drift during peak traffic windows."
-      - "Developed resilient RESTful microservices in Spring Boot with Redis caching and automated retry policies for real-time inventory synchronization."
+      - "Developed RESTful APIs using Java Spring Boot, built cloud ETL pipelines with Azure Data Factory, and delivered backend services following Agile software practices."
 
 projects:
-  - name: Distributed In-Memory Key-Value Store & Cache
-    domain: Distributed Systems & Infrastructure
-    stack:
-      - Golang
-      - gRPC
-      - Raft Consensus
-      - Protocol Buffers
-      - Docker
-    highlights:
-      - "Implemented a distributed, fault-tolerant key-value store in Golang using Raft consensus for leader election, log replication, and strong consistency under network partitions."
-      - "Built an LSM-Tree storage engine with Write-Ahead Logging (WAL) and concurrent memtables, achieving 120k+ QPS write throughput with sub-millisecond p99 latency."
-
-  - name: Algorithmic Trading & High-Frequency Backtesting Platform
+  - name: Algorithmic Trading Platform
     domain: Fintech & Quantitative Systems
+    year: "2024"
     stack:
       - Python
       - Django
@@ -83,22 +68,24 @@ projects:
       - WebSockets
       - pandas
       - numpy
-      - Redis
     highlights:
-      - "Developed a multithreaded quantitative backtesting engine capable of simulating 10+ years of tick data in under 12 seconds, achieving a 69.02% CAGR and 0.85 Sharpe ratio."
-      - "Built a real-time market data streaming pipeline with WebSockets and Redis Pub/Sub, broadcasting sub-millisecond price updates to interactive React charting dashboards."
+      - "Engineered a fully automated equity trading platform with low-latency WebSocket streaming, broker API integration, and a Django backend for real-time technical analysis and automated order routing."
+      - "Optimized trade execution using a multithreaded backtesting engine; validated across 1 year of historical market data achieving 69.02% CAGR with 0.85 win rate; built a live React dashboard for performance monitoring."
 
-  - name: High-Performance Event-Driven API Gateway & Rate Limiter
-    domain: Cloud Infrastructure & Networking
+  - name: Webhook Delivery Engine
+    domain: Distributed Systems & Event-Driven Infrastructure
+    year: "2025"
     stack:
       - Golang
       - Redis
+      - PostgreSQL
       - Docker
-      - JWT
-      - Reverse Proxy
+      - HMAC-SHA256
+      - REST APIs
     highlights:
-      - "Engineered a low-latency API Gateway in Go featuring distributed rate limiting (Token Bucket & Sliding Window Counter) backed by Redis Lua scripts, handling 50k+ concurrent requests."
-      - "Implemented stateless JWT authentication validation, reverse proxy routing with connection pooling, and automated circuit breaking with zero measurable overhead."
+      - "Engineered a resilient asynchronous webhook delivery microservice in Golang dispatching real-time notifications to subscriber endpoints, processing 10,000+ events/min."
+      - "Implemented HMAC-SHA256 signature verification for payload security, exponential backoff retries with jitter, and a Dead-Letter Queue (DLQ) for handling transient recipient outages."
+      - "Built a concurrent worker pool with Redis priority queues, PostgreSQL audit logging, and health/latency monitoring."
 
 competitive_programming:
   - platform: Codeforces
@@ -106,41 +93,52 @@ competitive_programming:
     details: "Max Rating: 1862, Global Rank 46 in Round 941"
   - platform: LeetCode
     title: Knight
-    details: "Max Rating: 1854, Top 5%, Rank 520, 800+ problems solved across platforms"
+    details: "Max Rating: 1854, Top 5%, Rank 520, solved 800+ problems across competitive platforms"
+  - platform: Career Milestones
+    title: Production Delivery
+    details: "Delivered end-to-end fintech migration over 7 months, from architecture through Kubernetes deployment with zero production incidents"
 
 core_skills:
+  - Java
   - Golang
-  - Go
   - C#
   - ".NET 10"
-  - Java
-  - Spring Boot
-  - Python
   - SQL
+  - Python
+  - JavaScript
+  - C++
+  - Spring Boot
+  - Microservices
+  - RESTful APIs
+  - OpenAPI
+  - Dependency Injection
+  - Microsoft SQL Server
+  - MongoDB
+  - Redis
+  - Dapper ORM
   - Docker
   - Kubernetes
-  - Microservices
-  - Distributed Systems
-  - Redis
-  - Kafka
-  - gRPC
-  - REST APIs
-  - Azure DevOps
-  - ELK Stack
-  - HashiCorp Vault
+  - Azure
+  - Azure DevOps CI/CD
   - Git
-  - CI/CD
-  - Linux
-  - React
+  - HashiCorp Vault
+  - Kerberos
+  - RBAC
+  - Playwright
+  - Jest
+  - ELK Stack
+  - Filebeat
+  - Distributed Tracing
+  - Kafka
 
 target:
   levels:
     - "SDE 1"
-    - "SDE 2"
     - "Software Engineer"
     - "Backend Engineer"
     - "Software Developer"
-  yoe_range: "0-3"
+  yoe_range: "0-2"
+  min_compensation_lpa: 18
   focus_areas:
     - High-throughput backend systems
     - Distributed systems
