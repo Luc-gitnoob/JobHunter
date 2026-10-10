@@ -121,8 +121,12 @@ filters:
   # Maximum allowed YOE upper bound: 'auto' dynamically calculates from career_start_date in profile.yaml (<2 YOE in 2026, <3 YOE in 2027)
   max_yoe_mentioned: auto
 
-  # Agency / Staffing / Consultancy / Publication keywords in company name
-  # Automatically filters out bodyshops and non-tech publications from broad scrapers
+  # Minimum explicit CTC threshold in LPA (INR)
+  # Any posting explicitly stating an upper salary below this (e.g. 3-6 LPA, 10 LPA) is dropped
+  min_salary_lpa: 18
+
+  # Business model / agency keywords in company name
+  # Filters out third-party staffing agencies, bodyshops, and recruitment vendors
   company_exclude:
     - "staffing"
     - "recruitment"
@@ -133,22 +137,18 @@ filters:
     - "consultants"
     - "solutions"
     - "infotech"
-    - "technologies"
     - "services"
     - "manpower"
     - "talent"
     - "placements"
     - "outsourcing"
+    - "offshoring"
     - "partners"
-    - "ventures"
     - "advisors"
     - "advisory"
     - "workforce"
     - "resource"
     - "resources"
-    - "outlook"
-    - "umanist"
-    - "golden opportunities"
 
 # LLM Scoring
 scoring:

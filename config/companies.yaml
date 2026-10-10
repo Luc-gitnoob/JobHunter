@@ -173,6 +173,48 @@ companies:
     priority: 1
     geo_filter: ["India", "Bangalore", "Bengaluru", "Hyderabad", "Pune", "Remote"]
 
+  - name: Databricks
+    ats_platform: greenhouse
+    ats_slug: databricks
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: MongoDB
+    ats_platform: greenhouse
+    ats_slug: mongodb
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Gurgaon", "Remote"]
+
+  - name: Twilio
+    ats_platform: greenhouse
+    ats_slug: twilio
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Druva
+    ats_platform: greenhouse
+    ats_slug: druva
+    priority: 1
+    geo_filter: ["India", "Pune", "Remote"]
+
+  - name: slice
+    ats_platform: greenhouse
+    ats_slug: slice
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Meesho
+    ats_platform: lever
+    ats_slug: meesho
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Freshworks
+    ats_platform: smartrecruiters
+    ats_slug: freshworks
+    priority: 1
+    geo_filter: ["India", "Chennai", "Bangalore", "Remote"]
+
 # ============================================================
 # python-jobspy Targeted Searches
 # For top tech companies without public Greenhouse/Lever/Ashby/SmartRecruiters APIs

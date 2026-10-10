@@ -73,6 +73,9 @@ class PreFilter:
             c.lower() for c in config.get("company_exclude", [])
         ]
 
+        # Minimum salary benchmark (in LPA INR)
+        self.min_salary_lpa = float(config.get("min_salary_lpa", 18.0))
+
         # Allow explicit numeric override from config if provided
         configured_max = config.get("max_yoe_mentioned")
         if isinstance(configured_max, int) and configured_max > 0:
@@ -80,7 +83,8 @@ class PreFilter:
 
         logger.info(
             f"[PreFilter] Dynamic candidate experience: {self.candidate_yoe:.2f} yrs "
-            f"(started {career_start}). Hard YOE upper bound: <{self.max_yoe} YOE."
+            f"(started {career_start}). Hard YOE upper bound: <{self.max_yoe} YOE. "
+            f"Min compensation benchmark: >={self.min_salary_lpa:.0f} LPA."
         )
 
     def apply(self, job: RawJob, geo_filter: list[str] = None) -> tuple[bool, Optional[str]]:
@@ -156,7 +160,45 @@ class PreFilter:
             if is_disqualified:
                 return False, f"JD exceeds candidate experience threshold: {reason} (candidate upper bound: <{self.max_yoe} YOE)"
 
+        # 7. Minimum compensation check (if explicit salary is stated in JD)
+        if self.min_salary_lpa and job.description:
+            is_low_pay, reason = self.check_low_salary(job.description, self.min_salary_lpa)
+            if is_low_pay:
+                return False, f"Compensation below target tier: {reason}"
+
         return True, None
+
+    def check_low_salary(self, description: str, min_lpa: float = 18.0) -> tuple[bool, Optional[str]]:
+        """
+        Check if the job description explicitly mentions a compensation package below min_lpa.
+        If salary is unmentioned, passes through (top tech companies typically state 'competitive').
+        """
+        if not description:
+            return False, None
+
+        # 1. Salary ranges in LPA / Lacs / Lakhs: e.g. '4 - 8 LPA', '6 to 10 Lacs'
+        range_matches = re.finditer(
+            r"(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?|inr\s*lpa)\b",
+            description,
+            re.IGNORECASE,
+        )
+        for m in range_matches:
+            upper = float(m.group(2))
+            if upper < min_lpa:
+                return True, f"Listed range '{m.group(0).strip()}' is below {min_lpa:.0f} LPA"
+
+        # 2. Standalone salary statements: e.g. 'CTC: 10 LPA', 'Salary: 12 Lacs'
+        single_matches = re.finditer(
+            r"(?:ctc|salary|package|compensation|stipend)?[:\s]+(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?)\b",
+            description,
+            re.IGNORECASE,
+        )
+        for m in single_matches:
+            val = float(m.group(1))
+            if val < min_lpa:
+                return True, f"Listed package '{m.group(0).strip()}' is below {min_lpa:.0f} LPA"
+
+        return False, None
 
     def check_disqualifying_yoe(self, description: str, max_allowed: int) -> tuple[bool, Optional[str]]:
         """
