@@ -156,11 +156,6 @@ scoring:
   model: "gemini-3.5-flash-lite"  # High throughput, fast latency, accurate scoring
   temperature: 0.3                # Low temp for consistent scoring
 
-# Resume generation
-resume:
-  output_dir: "output/resumes"
-  latex_compiler: "pdflatex"  # or xelatex, lualatex
-
 # Telegram notifications
 telegram:
   # Message format: rich markdown with inline buttons

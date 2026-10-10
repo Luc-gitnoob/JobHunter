@@ -37,23 +37,28 @@ SCORING_PROMPT = """You are an expert technical recruiter evaluating job fit.
 {description}
 
 ## Your Task
-Evaluate how well this candidate matches this job posting. Consider:
-1. Technical stack alignment (languages, frameworks, tools — Golang, C#/.NET, Java/Spring Boot, Python, React, SQL, Docker, Kubernetes, distributed systems)
-2. Experience level match (CRITICAL HARD REQUIREMENT: The candidate started their career in Jan 2025 and has only {current_yoe:.1f} years of professional experience. Target roles requiring strictly <{max_allowed_yoe} YOE. If the job description requires or expects >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring >={max_allowed_yoe} YOE score 70 or above. Only roles open to 0-1 YOE, fresh graduates, junior, associate, or early-career engineers should pass.)
-3. Company Pedigree & Compensation Benchmark (CRITICAL TIER REQUIREMENT):
+Evaluate how well this candidate matches this job posting in the following strict priority order (Priority 1 > Priority 2 > Priority 3 > Priority 4):
+
+1. [PRIORITY 1 - HIGHEST] Experience Level Match (CRITICAL HARD REQUIREMENT):
+   The candidate started their career in Jan 2025 and has only {current_yoe:.1f} years of professional experience. Target roles requiring strictly <{max_allowed_yoe} YOE.
+   If the job description requires or expects >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring >={max_allowed_yoe} YOE score 70 or above. Only roles open to 0-1 YOE, fresh graduates, junior, associate, or early-career engineers should pass.
+
+2. [PRIORITY 2 - HIGH] Company Pedigree & Compensation Benchmark (CRITICAL TIER REQUIREMENT):
    The candidate is an SDE at NAV Fund Services (high-scale fintech/distributed systems) targeting high-tier product engineering roles paying >= 18 LPA INR (or $25k+ USD for remote roles).
    - EXCELLENT FIT (Score boost): Direct product-based tech companies, high-growth VC-backed tech startups, unicorns, quantitative trading / hedge funds, high-scale fintechs, and tier-1 MNC engineering centers (archetypes include: Google, Uber, Atlassian, Microsoft, Stripe, Tower Research, D. E. Shaw, Amazon, Salesforce, Adobe, PhonePe, Flipkart, Razorpay, CRED, Swiggy, Groww, Juspay, Intuit, ServiceNow, OCI, BrowserStack, Zepto, Meta, Databricks, Rubrik, Cloudflare, NVIDIA, Cohesity, Nutanix, Arcesium, Goldman Sachs, Morgan Stanley, PayPal, Twilio, Postman, Zeta, Zomato, Meesho, Sprinklr, Walmart Global Tech, Tekion, Coinbase, or ANY startup/company with a similar high-bar product engineering culture paying >= 18 LPA).
    - REJECT / STRICT PENALTY (match_score < 45): Mass IT service consultancies, third-party recruitment agencies, staffing bodyshops, outsourcing vendors, non-tech publications/media companies, or small IT shops that typically pay below 18 LPA (e.g. 3-10 LPA). Even if technical keywords match (e.g. Java, Python, Go), reject the role with match_score < 45 if the employer is not a high-paying product company.
-4. Domain relevance (fintech, backend systems, distributed systems, high-scale web platforms)
+
+3. [PRIORITY 3 - MEDIUM] Technical Stack Alignment:
+   Alignment with candidate core technologies: Golang, C#/.NET, Java/Spring Boot, Python, SQL, Docker, Kubernetes, microservices, Kafka, Redis, and distributed systems.
+
+4. [PRIORITY 4 - LOWEST] Domain Relevance:
+   Relevance to fintech, backend systems, high-throughput distributed systems, or high-scale web platforms.
 
 Respond with ONLY a valid JSON object (no markdown, no code blocks):
 {{
     "match_score": <integer 0-100>,
-    "matching_skills": [<list of skills from candidate that match the JD>],
-    "skill_gaps": [<list of required skills the candidate lacks>],
-    "resume_emphasis": [<list of candidate accomplishments to highlight for THIS specific role>],
-    "summary": "<2-3 sentence analysis of why this is or isn't a good fit, including YOE and compensation/tier assessment>",
-    "recommended_keywords": [<keywords from the JD to incorporate into resume>]
+    "matching_skills": [<list of candidate skills that match the JD>],
+    "summary": "<1-2 line concise summary of why this is or isn't a good fit, covering YOE, compensation/tier, and tech fit>"
 }}
 """
 

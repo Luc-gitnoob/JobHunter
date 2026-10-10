@@ -7,13 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies + TeX Live for PDF resume generation
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    texlive-latex-base \
-    texlive-latex-extra \
-    texlive-fonts-recommended \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -24,8 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy source code and configuration
 COPY . .
 
-# Ensure directories exist
-RUN mkdir -p data output/resumes
+# Ensure data directory exists
+RUN mkdir -p data
 
 # Expose web dashboard port
 EXPOSE 8080

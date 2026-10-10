@@ -43,8 +43,6 @@ from src.pipeline.normalizer import normalize_job
 from src.pipeline.filters import PreFilter
 from src.pipeline.dedup import DedupEngine
 from src.pipeline.scorer import JobScorer
-from src.resume.tailor import ResumeTailor
-from src.resume.compiler import ResumeCompiler
 from src.notifications.telegram import TelegramNotifier, generate_referral_message
 
 # ===================== LOGGING =====================
@@ -95,8 +93,6 @@ SOURCES = {
 async def _notify_job_alert(
     db_job: Job,
     score_result: dict,
-    tailor: Optional[ResumeTailor],
-    compiler: Optional[ResumeCompiler],
     notifier: TelegramNotifier,
     profile: dict,
 ) -> bool:
@@ -153,9 +149,8 @@ async def run_poll_cycle(all_config: dict):
     2. Normalize
     3. Pre-filter
     4. Dedup
-    5. LLM score
-    6. Generate tailored resume + referral message
-    7. Notify via Telegram
+    5. LLM score (strict <2 YOE and 18+ LPA product caliber)
+    6. Notify via Telegram with referral message
     """
     config = all_config["config"]
     companies_config = all_config["companies"]
@@ -163,8 +158,6 @@ async def run_poll_cycle(all_config: dict):
 
     pre_filter = PreFilter(config.get("filters", {}), profile=profile)
     scorer = JobScorer(config.get("scoring", {}))
-    tailor = ResumeTailor(config.get("scoring", {}))
-    compiler = ResumeCompiler(config.get("resume", {}))
     notifier = TelegramNotifier()
 
     min_score = config.get("scoring", {}).get("min_score", 70)
@@ -378,8 +371,6 @@ async def run_poll_cycle(all_config: dict):
             await _notify_job_alert(
                 db_job=db_job,
                 score_result=score_data,
-                tailor=tailor,
-                compiler=compiler,
                 notifier=notifier,
                 profile=profile,
             )
@@ -469,8 +460,6 @@ async def run_poll_cycle(all_config: dict):
                     await _notify_job_alert(
                         db_job=db_job,
                         score_result=score_result,
-                        tailor=tailor,
-                        compiler=compiler,
                         notifier=notifier,
                         profile=profile,
                     )
