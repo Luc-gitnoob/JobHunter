@@ -135,7 +135,27 @@ filters:
     - "co-op"
     - "working student"
     - "apprentice"
-    # Non-technical Analyst Exclusions (to guard "analyst" in title_include)
+
+    # Degree / Education Exclusions (Candidate holds B.Tech)
+    - "phd"
+    - "ph.d"
+    - "doctorate"
+    - "postdoc"
+
+    # Future / Campus Batch Exclusions (Candidate graduated 2025 and is in workforce)
+    - "2027"
+    - "2028"
+    - "2029"
+    - "campus hire"
+
+    # Non-technical / Compliance / Risk Exclusions (Guards against non-SWE roles)
+    - "risk"
+    - "compliance"
+    - "aml"
+    - "fraud"
+    - "kyc"
+    - "sanctions"
+    - "risk management"
     - "business analyst"
     - "financial analyst"
     - "data analyst"
@@ -145,6 +165,11 @@ filters:
     - "compliance analyst"
     - "investment banking analyst"
     - "equity research analyst"
+
+    # Contractor / Freelance Exclusions
+    - "contractor"
+    - "freelance"
+    - "freelancer"
 
   # Maximum allowed YOE upper bound: 'auto' dynamically calculates from career_start_date in profile.yaml (<2 YOE in 2026, <3 YOE in 2027)
   max_yoe_mentioned: auto
@@ -177,10 +202,11 @@ filters:
     - "workforce"
     - "resource"
     - "resources"
+    - "flexiple"
 
 # LLM Scoring
 scoring:
-  min_score: 70                   # Only generate resume + notify for scores >= this
+  min_score: 80                   # Top-tier product match threshold (filters out marginal fullstack/AWS roles)
   model: "gemini-3.5-flash-lite"  # High throughput, fast latency, accurate scoring
   temperature: 0.3                # Low temp for consistent scoring
 

@@ -157,8 +157,14 @@ class PreFilter:
             if pat.search(title_lower):
                 return False, f"Title '{job.title}' matches exclude keyword: '{kw}'"
 
-        # 3. Title YOE check — reject senior roles specifying YOE in title (e.g. "Software Engineer (3+ YOE)")
+        # 3. Title YOE check — reject senior roles specifying YOE in title (e.g. "Software Engineer (3+ YOE)", "Software Engineer (3-5)")
         if self.max_yoe and job.title:
+            paren_match = re.search(r"[\(\[]\s*(\d+)\s*(?:-|to|\+)\s*(?:(\d+)\s*)?[\)\]]", job.title)
+            if paren_match:
+                low = int(paren_match.group(1))
+                if low >= self.max_yoe:
+                    return False, f"Title specifies disqualifying experience bracket ({paren_match.group(0)}) (candidate upper bound: <{self.max_yoe} YOE)"
+
             is_disqualified, reason = self.check_disqualifying_yoe(job.title, self.max_yoe)
             if is_disqualified:
                 return False, f"Title mentions disqualifying experience: {reason} (candidate upper bound: <{self.max_yoe} YOE)"

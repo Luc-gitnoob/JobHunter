@@ -39,14 +39,18 @@ SCORING_PROMPT = """You are an expert technical recruiter evaluating job fit.
 ## Your Task
 Evaluate how well this candidate matches this job posting in the following strict priority order (Priority 1 > Priority 2 > Priority 3 > Priority 4):
 
-1. [PRIORITY 1 - HIGHEST] Experience Level Match (CRITICAL HARD REQUIREMENT):
+1. [PRIORITY 1 - HIGHEST] Experience Level & Role Seniority Match (CRITICAL HARD REQUIREMENT):
    The candidate started their career in Jan 2025 and has only {current_yoe:.1f} years of professional experience. Target roles requiring strictly <{max_allowed_yoe} YOE.
-   If the job description strictly requires minimum >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring minimum >={max_allowed_yoe} YOE score 70 or above. Roles specifying junior brackets like 0-2 years or 1-3 years where the minimum required experience is <{max_allowed_yoe} YOE, fresh graduates, junior, associate, or early-career engineers should pass.
+   - REJECT MID/SENIOR ROLES (match_score < 40): If the role or JD targets SDE-2 / SDE II / SWE II, mid-level, experienced, or strictly requires >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE), you MUST reject this role by giving match_score < 40. DO NOT grant exceptions or score boosts for competitive programming, fintech pedigree, or technical competence if the role is SDE-2 or requires >={max_allowed_yoe} YOE.
+   - REJECT DEGREE MISMATCH (match_score < 30): The candidate holds a B.Tech degree (NOT a PhD, Master's, or Doctorate). If the job description strictly requires a PhD or Doctorate, you MUST reject this role with match_score < 30.
+   - REJECT FUTURE GRADUATION BATCHES (match_score < 30): The candidate is an active industry professional who graduated in 2025. If the role targets future college batches (e.g. 2026/2027/2028 campus hires or interns), reject with match_score < 30.
+   - ONLY EARLY CAREER PASSES: Roles open to 0-1 YOE, fresh graduates, junior brackets (0-2 years, 1-3 years where the minimum required experience is <{max_allowed_yoe} YOE), associate, or early-career engineers should pass.
 
-2. [PRIORITY 2 - HIGH] Company Pedigree & Compensation Benchmark (CRITICAL TIER REQUIREMENT):
-   The candidate is an SDE at NAV Fund Services (high-scale fintech/distributed systems) targeting high-tier product engineering roles paying >= 18 LPA INR (or $25k+ USD for remote roles).
+2. [PRIORITY 2 - HIGH] Company Pedigree & Role Type Benchmark (CRITICAL TIER REQUIREMENT):
+   The candidate is an SDE at NAV Fund Services targeting high-tier product engineering roles paying >= 18 LPA INR (or $25k+ USD for remote roles).
+   - REJECT NON-ENGINEERING / OPERATIONS (match_score < 30): The candidate is strictly seeking core software engineering, backend, platform, or distributed systems roles. Strictly REJECT non-engineering roles such as Risk Management, AML, Compliance, Operations, Fraud Analyst, or Business Analysis with match_score < 30, even if posted by a top-tier fintech.
+   - REJECT CONTRACTOR NETWORKS & STAFFING (match_score < 40): Freelancer networks (e.g. Flexiple, Toptal), IT service consultancies, bodyshops, or staffing agencies must be rejected with match_score < 40.
    - EXCELLENT FIT (Score boost): Direct product-based tech companies, high-growth VC-backed tech startups, unicorns, quantitative trading / hedge funds, high-scale fintechs, and tier-1 MNC engineering centers (archetypes include: Google, Uber, Atlassian, Microsoft, Stripe, Tower Research, D. E. Shaw, Amazon, Salesforce, Adobe, PhonePe, Flipkart, Razorpay, CRED, Swiggy, Groww, Juspay, Intuit, ServiceNow, OCI, BrowserStack, Zepto, Meta, Databricks, Rubrik, Cloudflare, NVIDIA, Cohesity, Nutanix, Arcesium, Goldman Sachs, Morgan Stanley, PayPal, Twilio, Postman, Zeta, Zomato, Meesho, Sprinklr, Walmart Global Tech, Tekion, Coinbase, or ANY startup/company with a similar high-bar product engineering culture paying >= 18 LPA).
-   - REJECT / STRICT PENALTY (match_score < 45): Mass IT service consultancies, third-party recruitment agencies, staffing bodyshops, outsourcing vendors, non-tech publications/media companies, or small IT shops that typically pay below 18 LPA (e.g. 3-10 LPA). Even if technical keywords match (e.g. Java, Python, Go), reject the role with match_score < 45 if the employer is not a high-paying product company.
 
 3. [PRIORITY 3 - MEDIUM] Technical Stack Alignment:
    Alignment with candidate core technologies: Golang, C#/.NET, Java/Spring Boot, Python, SQL, Docker, Kubernetes, microservices, Kafka, Redis, and distributed systems.
@@ -207,6 +211,24 @@ class JobScorer:
                         f"Automatically rejected: {reason}. "
                         f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
                     )
+
+                # Safety clamp: if summary or title indicates SDE-2, PhD, future batch, or non-SWE compliance
+                summary_lower = result.get("summary", "").lower()
+                title_lower = title.lower()
+                disqualify_indicators = [
+                    "sde ii", "sde 2", "sde-ii", "sde-2", "swe ii", "swe 2",
+                    "phd", "ph.d", "doctorate",
+                    "risk management", "aml", "sanctions", "compliance analyst",
+                    "2027 graduate", "2027 campus", "2028 graduate", "2028 campus"
+                ]
+                for ind in disqualify_indicators:
+                    if ind in summary_lower or ind in title_lower:
+                        logger.warning(
+                            f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                            f"Detected disqualified archetype ('{ind}')."
+                        )
+                        result["match_score"] = 30
+                        break
 
             logger.info(
                 f"[Scorer] {company} — {title}: score={result['match_score']}/100 | {result.get('summary', '')}"
