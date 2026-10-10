@@ -80,18 +80,6 @@ companies:
     priority: 1
     geo_filter: ["India", "Bangalore", "Bengaluru"]
 
-  - name: Postman
-    ats_platform: greenhouse
-    ats_slug: postman
-    priority: 1
-    geo_filter: ["Bangalore", "Bengaluru", "Remote"]
-
-  - name: Urban Company
-    ats_platform: greenhouse
-    ats_slug: urbancompany
-    priority: 1
-    geo_filter: ["Gurgaon", "Gurugram", "Bangalore", "Bengaluru"]
-
   # === Tier 1: Top Indian Product & Fintech (Greenhouse) ===
   - name: Groww
     ats_platform: greenhouse
@@ -124,23 +112,11 @@ companies:
     geo_filter: ["Bangalore", "Bengaluru"]
 
   # === Tier 1 & 2: Top Product & Fintech (Lever) ===
-  - name: Rippling
-    ats_platform: lever
-    ats_slug: rippling
-    priority: 1
-    geo_filter: ["Bangalore", "Bengaluru"]
-
   - name: Zeta
     ats_platform: lever
     ats_slug: zeta
     priority: 1
     geo_filter: ["Bangalore", "Bengaluru", "Mumbai"]
-
-  - name: Juspay
-    ats_platform: lever
-    ats_slug: juspay
-    priority: 1
-    geo_filter: ["Bangalore", "Bengaluru"]
 
   - name: CRED
     ats_platform: lever
@@ -221,6 +197,26 @@ jobspy_searches:
     results_wanted: 15
 
   - search_term: "Uber Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Postman Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Urban Company Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Rippling Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Juspay Software Engineer"
     location: "India"
     sites: ["linkedin"]
     results_wanted: 15

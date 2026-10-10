@@ -206,8 +206,9 @@ class PreFilter:
         # 5. Company / Staffing Agency filter (strictly for uncurated third-party scrapers)
         # Direct ATS catalog targets (e.g. Honeywell Technology Solutions, Amazon Web Services, Uber India Systems Private Limited)
         # must bypass company_exclude keywords.
+        raw_data = getattr(job, "raw_data", None) or {}
         is_curated_ats = (
-            job.raw_data.get("_is_curated", False)
+            raw_data.get("_is_curated", False)
             or getattr(job, "source", "") in ["greenhouse", "lever", "ashby", "smartrecruiters", "amazon"]
             or any(
                 c_name.lower() in (job.company_name or "").lower()
@@ -248,7 +249,7 @@ class PreFilter:
         # 7. Minimum compensation check (unlisted salaries pass through)
         # Only drop a posting if salary_max is explicitly parsed and strictly less than 18 LPA
         if self.min_salary_lpa:
-            salary_max = getattr(job, "salary_max", None) or (job.raw_data or {}).get("salary_max")
+            salary_max = getattr(job, "salary_max", None) or raw_data.get("salary_max")
             if salary_max is not None:
                 try:
                     val = float(salary_max)
