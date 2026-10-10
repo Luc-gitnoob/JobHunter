@@ -84,13 +84,6 @@ class TelegramNotifier:
             ]
         }
 
-        # Compact connection note for LinkedIn's 300-char "Add a note" limit
-        skills_short = ", ".join(matching_skills[:3]) if matching_skills else "backend systems"
-        connect_note = (
-            f"Hi, I'm an SDE at NAV Fund Services. I saw {company}'s {title} opening and my background in {skills_short} is a strong fit. "
-            f"Could you please submit a referral for me for this role? I have my resume ready to share. Thanks! - Salil"
-        )
-
         # Build the message
         score_emoji = self._score_emoji(match_score)
         skills_text = ", ".join(matching_skills[:8])
@@ -103,9 +96,7 @@ class TelegramNotifier:
             f"📊 *Match Analysis:*\n{self._escape_md(match_summary)}\n\n"
             f"🔧 *Key Skills:* {self._escape_md(skills_text)}\n\n"
             f"{'─' * 30}\n\n"
-            f"🤝 *LinkedIn Note \\(copy for 'Add a note'\\):*\n"
-            f"```\n{connect_note}\n```\n\n"
-            f"📨 *Full Referral Pitch \\(for Chat/Email\\):*\n"
+            f"📨 *Referral Pitch \\(for LinkedIn Chat/Email\\):*\n"
             f"```\n{referral_message}\n```"
         )
 
@@ -153,8 +144,7 @@ class TelegramNotifier:
                         f"Match Analysis:\n{match_summary}\n\n"
                         f"Key Skills: {skills_text}\n\n"
                         f"{'─' * 30}\n\n"
-                        f"LinkedIn Note (for 'Add a note'):\n{connect_note}\n\n"
-                        f"Full Referral Pitch:\n{referral_message}"
+                        f"Referral Pitch (for LinkedIn Chat/Email):\n{referral_message}"
                     )
                     text_response = await client.post(
                         f"{TELEGRAM_API.format(token=self.token)}/sendMessage",
@@ -184,7 +174,7 @@ class TelegramNotifier:
                     text_response.raise_for_status()
 
             self._last_sent_at = time.monotonic()
-            logger.info(f"[Telegram] Sent alert for {company} — {title}")
+            logger.info(f"[Telegram] Sent alert for {company} - {title}")
             return True
 
         except Exception as e:
