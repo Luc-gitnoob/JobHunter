@@ -155,7 +155,18 @@ async def run_poll_cycle(all_config: dict):
     companies_config = all_config["companies"]
     profile = all_config["profile"]
 
-    pre_filter = PreFilter(config.get("filters", {}), profile=profile)
+    curated_names = [c["name"] for c in companies_config.get("companies", [])]
+    for s in companies_config.get("jobspy_searches", []):
+        term = s.get("search_term", "")
+        first_word = term.split()[0] if term else ""
+        if first_word:
+            curated_names.append(first_word)
+
+    pre_filter = PreFilter(
+        config.get("filters", {}),
+        profile=profile,
+        curated_companies=curated_names,
+    )
     scorer = JobScorer(config.get("scoring", {}))
     notifier = TelegramNotifier()
 
@@ -199,9 +210,10 @@ async def run_poll_cycle(all_config: dict):
                 jobs = await source.fetch_jobs(name, slug)
                 logger.info(f"  [{platform}] {name}: {len(jobs)} raw postings")
 
-                # Attach geo_filter as metadata for filtering
+                # Attach geo_filter and curated flag as metadata for filtering
                 for job in jobs:
                     job.raw_data["_geo_filter"] = geo_filter
+                    job.raw_data["_is_curated"] = True
 
                 all_raw_jobs.extend(jobs)
 
@@ -243,6 +255,7 @@ async def run_poll_cycle(all_config: dict):
             amazon_jobs = await amazon_source.fetch_jobs(company_name="Amazon")
             for job in amazon_jobs:
                 job.raw_data["_geo_filter"] = ["India", "Bangalore", "Bengaluru", "Hyderabad", "Pune", "Remote"]
+                job.raw_data["_is_curated"] = True
             all_raw_jobs.extend(amazon_jobs)
             logger.info(f"  [amazon.jobs] Amazon: {len(amazon_jobs)} raw postings")
         except Exception as e:

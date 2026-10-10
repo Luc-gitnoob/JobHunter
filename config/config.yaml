@@ -31,11 +31,32 @@ filters:
     - ".net developer"
     - "java developer"
     - "associate engineer"
+    # MTS Hierarchy (Nutanix, Salesforce, Oracle Cloud, Adobe, Arcesium, Cohesity)
+    - "member of technical staff"
+    - "associate member of technical staff"
+    - "mts"
+    - "associate mts"
+    # Banking GCC Titles (Goldman Sachs, Morgan Stanley, BlackRock)
+    - "analyst"
+    - "technology analyst"
+    - "software engineering analyst"
+    - "software engineer analyst"
+    - "developer analyst"
+    # Systems / Low-Latency
+    - "systems engineer"
+    - "c++ developer"
+    - "c++ software engineer"
+    - "c/c++ developer"
 
   # Jobs with these in the title are immediately dropped
   title_exclude:
     - "senior"
-    - "staff"
+    - "staff engineer"
+    - "staff software engineer"
+    - "staff developer"
+    - "staff sde"
+    - "staff swe"
+    - "chief of staff"
     - "principal"
     - "lead"
     - "manager"
@@ -49,14 +70,11 @@ filters:
     - "specialist"
     - "sr."
     - "sr"
-    - "l3"
-    - "l-3"
-    - "l 3"
+    # Note: Google L3 / Level 3 is standard entry-level SDE-1, so L3 is explicitly NOT excluded
     - "l4"
     - "l-4"
     - "l 4"
     - "l5"
-    - "level 3"
     - "level 4"
     - "level 5"
     - "sde ii"
@@ -117,6 +135,16 @@ filters:
     - "co-op"
     - "working student"
     - "apprentice"
+    # Non-technical Analyst Exclusions (to guard "analyst" in title_include)
+    - "business analyst"
+    - "financial analyst"
+    - "data analyst"
+    - "operations analyst"
+    - "risk analyst"
+    - "credit analyst"
+    - "compliance analyst"
+    - "investment banking analyst"
+    - "equity research analyst"
 
   # Maximum allowed YOE upper bound: 'auto' dynamically calculates from career_start_date in profile.yaml (<2 YOE in 2026, <3 YOE in 2027)
   max_yoe_mentioned: auto

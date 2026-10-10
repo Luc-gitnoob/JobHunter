@@ -1,8 +1,8 @@
-"""Telegram notification bot for JobHunter."""
-
+import asyncio
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -28,6 +28,8 @@ class TelegramNotifier:
     def __init__(self):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.chat_id = os.getenv("TELEGRAM_CHAT_ID")
+        self._last_sent_at: float = 0.0
+        self._min_interval: float = 1.5  # Throttling delay between consecutive messages (prevents Telegram 429)
 
         if not self.token or not self.chat_id:
             logger.warning(
@@ -52,13 +54,19 @@ class TelegramNotifier:
         resume_path: Optional[Path] = None,
     ) -> bool:
         """
-        Send a rich job alert notification.
+        Send a rich job alert notification with rate throttling (~1.5s between messages).
 
         Returns True if sent successfully, False otherwise.
         """
         if not self.is_configured:
             logger.warning("[Telegram] Not configured, skipping notification")
             return False
+
+        # Enforce rate limiting between consecutive messages to avoid 429 Too Many Requests
+        now = time.monotonic()
+        elapsed = now - self._last_sent_at
+        if elapsed < self._min_interval:
+            await asyncio.sleep(self._min_interval - elapsed)
 
         # Build the message
         score_emoji = self._score_emoji(match_score)
@@ -90,6 +98,24 @@ class TelegramNotifier:
                             "disable_web_page_preview": True,
                         },
                     )
+                    if text_response.status_code == 429:
+                        retry_after = 3.0
+                        try:
+                            retry_after = float(text_response.json().get("parameters", {}).get("retry_after", 3.0))
+                        except Exception:
+                            pass
+                        logger.warning(f"[Telegram] Rate limited (429). Sleeping for {retry_after}s before retry")
+                        await asyncio.sleep(retry_after)
+                        text_response = await client.post(
+                            f"{TELEGRAM_API.format(token=self.token)}/sendMessage",
+                            json={
+                                "chat_id": self.chat_id,
+                                "text": message,
+                                "parse_mode": "MarkdownV2",
+                                "disable_web_page_preview": True,
+                            },
+                        )
+
                     text_response.raise_for_status()
                 except httpx.HTTPStatusError as e:
                     logger.warning(f"[Telegram] MarkdownV2 failed ({e}), falling back to plain text")
@@ -112,9 +138,25 @@ class TelegramNotifier:
                             "disable_web_page_preview": True,
                         },
                     )
+                    if text_response.status_code == 429:
+                        retry_after = 3.0
+                        try:
+                            retry_after = float(text_response.json().get("parameters", {}).get("retry_after", 3.0))
+                        except Exception:
+                            pass
+                        logger.warning(f"[Telegram] Plain text rate limited (429). Sleeping {retry_after}s")
+                        await asyncio.sleep(retry_after)
+                        text_response = await client.post(
+                            f"{TELEGRAM_API.format(token=self.token)}/sendMessage",
+                            json={
+                                "chat_id": self.chat_id,
+                                "text": plain_msg,
+                                "disable_web_page_preview": True,
+                            },
+                        )
                     text_response.raise_for_status()
 
-                # Note: Master resume PDF is managed directly by the candidate; do not attach PDFs to Telegram alerts.
+            self._last_sent_at = time.monotonic()
             logger.info(f"[Telegram] Sent alert for {company} — {title}")
             return True
 

@@ -83,11 +83,12 @@ class PreFilter:
     Configured via config.yaml filter rules and profile.yaml career start date.
     """
 
-    def __init__(self, config: dict, profile: dict = None):
+    def __init__(self, config: dict, profile: dict = None, curated_companies: list[str] = None):
         """
         Args:
             config: The 'filters' section from config.yaml
             profile: The candidate profile dict from profile.yaml
+            curated_companies: List of direct target company names to bypass agency filtering
         """
         self.title_include = [
             t.lower() for t in config.get("title_include", [])
@@ -95,6 +96,20 @@ class PreFilter:
         self.title_exclude = [
             t.lower() for t in config.get("title_exclude", [])
         ]
+
+        # Precompile word-bounded regex patterns for title matching
+        # Uses boundary checks to eliminate substring collisions on short tokens like \b(sr|vp|sre|qa)\b
+        self.include_patterns = [
+            (kw, re.compile(rf"(?<![a-zA-Z0-9]){re.escape(kw.lower())}(?![a-zA-Z0-9])", re.IGNORECASE))
+            for kw in config.get("title_include", [])
+        ]
+        self.exclude_patterns = [
+            (kw, re.compile(rf"(?<![a-zA-Z0-9]){re.escape(kw.lower())}(?![a-zA-Z0-9])", re.IGNORECASE))
+            for kw in config.get("title_exclude", [])
+        ]
+
+        # Curated direct target companies (bypass company_exclude agency filter)
+        self.curated_companies = [c.lower() for c in (curated_companies or [])]
 
         # Calculate dynamic YOE from candidate's career start date (Jan 2025)
         career_start = (profile or {}).get("career_start_date", "2025-01")
@@ -129,15 +144,17 @@ class PreFilter:
         """
         title_lower = job.title.lower()
 
-        # 1. Title must contain at least one include keyword
-        if self.title_include:
-            if not any(kw in title_lower for kw in self.title_include):
+        # 1. Title must contain at least one include keyword (word-bounded: e.g. \bmts\b, \bswe\b)
+        if self.include_patterns:
+            matched_include = any(pat.search(title_lower) for _, pat in self.include_patterns)
+            if not matched_include:
                 return False, f"Title '{job.title}' doesn't match any include keywords"
 
-        # 2. Title must NOT contain any exclude keywords (using delimiter boundaries to prevent substring collisions)
-        for kw in self.title_exclude:
-            pat = r"(?:^|[\s\-_,.:/()|])" + re.escape(kw) + r"(?:$|[\s\-_,.:/()|])"
-            if re.search(pat, title_lower):
+        # 2. Title must NOT contain any exclude keywords (word-bounded: e.g. \b(sr|vp|sre|qa)\b)
+        for kw, pat in self.exclude_patterns:
+            if kw == "staff" and "member of technical staff" in title_lower:
+                continue
+            if pat.search(title_lower):
                 return False, f"Title '{job.title}' matches exclude keyword: '{kw}'"
 
         # 3. Title YOE check — reject senior roles specifying YOE in title (e.g. "Software Engineer (3+ YOE)")
@@ -186,8 +203,17 @@ class PreFilter:
             if not is_geo_match:
                 return False, f"Location '{job.location}' not in geo filter: {geo_filter}"
 
-        # 5. Company / Staffing Agency filter (for uncurated scraper jobs)
-        is_curated_ats = getattr(job, "source", "") in ["greenhouse", "lever", "ashby", "smartrecruiters", "amazon"]
+        # 5. Company / Staffing Agency filter (strictly for uncurated third-party scrapers)
+        # Direct ATS catalog targets (e.g. Honeywell Technology Solutions, Amazon Web Services, Uber India Systems Private Limited)
+        # must bypass company_exclude keywords.
+        is_curated_ats = (
+            job.raw_data.get("_is_curated", False)
+            or getattr(job, "source", "") in ["greenhouse", "lever", "ashby", "smartrecruiters", "amazon"]
+            or any(
+                c_name.lower() in (job.company_name or "").lower()
+                for c_name in self.curated_companies
+            )
+        )
         if not is_curated_ats:
             company_lower = (job.company_name or "").lower()
             for kw in self.company_exclude:
@@ -219,40 +245,55 @@ class PreFilter:
             if is_disqualified:
                 return False, f"JD exceeds candidate experience threshold: {reason} (candidate upper bound: <{self.max_yoe} YOE)"
 
-        # 7. Minimum compensation check (if explicit salary is stated in JD)
-        if self.min_salary_lpa and job.description:
-            is_low_pay, reason = self.check_low_salary(job.description, self.min_salary_lpa)
-            if is_low_pay:
-                return False, f"Compensation below target tier: {reason}"
+        # 7. Minimum compensation check (unlisted salaries pass through)
+        # Only drop a posting if salary_max is explicitly parsed and strictly less than 18 LPA
+        if self.min_salary_lpa:
+            salary_max = getattr(job, "salary_max", None) or (job.raw_data or {}).get("salary_max")
+            if salary_max is not None:
+                try:
+                    val = float(salary_max)
+                    if 0 < val < self.min_salary_lpa:
+                        return False, f"Parsed salary_max {val:.1f} LPA is below {self.min_salary_lpa:.0f} LPA"
+                except (ValueError, TypeError):
+                    pass
+
+            if job.description:
+                is_low_pay, reason = self.check_low_salary(job.description, self.min_salary_lpa)
+                if is_low_pay:
+                    return False, f"Compensation below target tier: {reason}"
 
         return True, None
 
     def check_low_salary(self, description: str, min_lpa: float = 18.0) -> tuple[bool, Optional[str]]:
         """
         Check if the job description explicitly mentions a compensation package below min_lpa.
-        If salary is unmentioned, passes through (top tech companies typically state 'competitive').
+        If salary is unmentioned, passes through (over 85% of Tier-1 Indian tech roles do not list salary).
         """
         if not description:
             return False, None
 
-        # 1. Salary ranges in LPA / Lacs / Lakhs: e.g. '4 - 8 LPA', '6 to 10 Lacs'
-        range_matches = re.finditer(
-            r"(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?|inr\s*lpa)\b",
-            description,
-            re.IGNORECASE,
-        )
-        for m in range_matches:
-            upper = float(m.group(2))
-            if upper < min_lpa:
-                return True, f"Listed range '{m.group(0).strip()}' is below {min_lpa:.0f} LPA"
+        # 1. Explicit salary ranges in LPA / Lacs / Lakhs:
+        # Require explicit compensation / CTC context or explicit 'LPA' unit
+        # e.g. 'CTC: 6-10 LPA', 'Salary: 8 to 12 Lacs', '10 - 14 LPA'
+        # Does NOT match bare '10-20 lacs users' or '5-10 lakhs records'
+        range_patterns = [
+            r"(?:ctc|salary|package|compensation|stipend|pay|remuneration)\s*(?:is|of|:|-|\b)\s*(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?|inr\s*lpa)\b",
+            r"\b(\d+(?:\.\d+)?)\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(?:lpa|inr\s*lpa)\b",
+        ]
+        for pat in range_patterns:
+            for m in re.finditer(pat, description, re.IGNORECASE):
+                upper = float(m.group(2))
+                if upper < min_lpa:
+                    return True, f"Listed range '{m.group(0).strip()}' is below {min_lpa:.0f} LPA"
 
-        # 2. Standalone salary statements: e.g. 'CTC: 10 LPA', 'Salary: 12 Lacs'
-        single_matches = re.finditer(
-            r"(?:ctc|salary|package|compensation|stipend)?[:\s]+(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?)\b",
-            description,
-            re.IGNORECASE,
+        # 2. Standalone explicit salary statements:
+        # Require explicit compensation keyword before the number
+        # e.g. 'CTC: 12 LPA', 'Salary: 10 Lacs', 'Package: 15 LPA'
+        single_pattern = (
+            r"(?:ctc|salary|package|compensation|remuneration)\s*(?:is|of|:|-|\b)\s*"
+            r"(\d+(?:\.\d+)?)\s*(?:lpa|lacs?|lakhs?|inr\s*lpa)\b"
         )
-        for m in single_matches:
+        for m in re.finditer(single_pattern, description, re.IGNORECASE):
             val = float(m.group(1))
             if val < min_lpa:
                 return True, f"Listed package '{m.group(0).strip()}' is below {min_lpa:.0f} LPA"
@@ -265,6 +306,10 @@ class PreFilter:
         disqualifying (>= max_allowed YOE).
         Handles ranges ('2 to 6 years', '4–6 years'), complex phrases ('3+ years of non-internship professional...'),
         parenthetical plurals ('Year(s)'), and filters out false positives like company age ('founded 25 years ago').
+
+        Evaluates against lower bound of YOE (min_yoe):
+        Listings stating '0-2 years' or '1-3 years' are preserved because their lower bound is within
+        early-career brackets.
         """
         if not description:
             return False, None
@@ -275,7 +320,7 @@ class PreFilter:
 
         year_suffix = r"(?:years?|yrs?|year\(s\)|yr\(s\))"
 
-        # 1. Check ranges: e.g. '2 to 6 years', '4-6 years', '3-5 yrs'
+        # 1. Check ranges: e.g. '0-2 years', '1-3 years', '3-5 years'
         range_pattern = rf"(\d+)\s*(?:-|to)\s*(\d+)\s*{year_suffix}\b"
         for m in re.finditer(range_pattern, text, re.IGNORECASE):
             lower = int(m.group(1))
@@ -283,16 +328,19 @@ class PreFilter:
             after_snippet = text[m.end():m.end() + 25].lower()
             if "ago" in after_snippet or "old" in after_snippet:
                 continue
+            # If the minimum required experience is >= max_allowed, candidate is disqualified
             if lower >= max_allowed:
-                return True, f"Requires {lower}-{upper} years experience"
+                return True, f"Requires minimum {lower} years experience ({lower}-{upper} yrs)"
 
-        # 2. Mask valid junior ranges (e.g. '0-1 year', '0-2 years', '1-2 yrs') so they don't trigger standalone '2 years' checks
-        cleaned_text = re.sub(
-            rf"\b(?:0|1)\s*(?:-|to)\s*(?:1|2)\s*{year_suffix}\b",
-            "JUNIOR_RANGE",
-            text,
-            flags=re.IGNORECASE,
-        )
+        # 2. Mask ALL ranges where lower bound is within candidate bracket (< max_allowed)
+        # e.g. '0-2 years', '0-3 years', '1-3 years' -> masked so upper bound does not trigger standalone checks
+        def mask_valid_range(m):
+            lower = int(m.group(1))
+            if lower < max_allowed:
+                return "JUNIOR_RANGE"
+            return m.group(0)
+
+        cleaned_text = re.sub(range_pattern, mask_valid_range, text, flags=re.IGNORECASE)
 
         # 3. Disqualifying standalone YOE patterns
         yoe_patterns = [
