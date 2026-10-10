@@ -68,6 +68,29 @@ class TelegramNotifier:
         if elapsed < self._min_interval:
             await asyncio.sleep(self._min_interval - elapsed)
 
+        import urllib.parse
+
+        # Build Google X-Ray search URL for zero-search-limit LinkedIn discovery
+        # Prioritizes college alumni, peer backend engineers, and engineering managers in India.
+        xray_query = f'site:linkedin.com/in "{company}" ("Software Engineer" OR "Engineering Manager" OR "IET") India'
+        referrer_search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(xray_query)}"
+
+        reply_markup = {
+            "inline_keyboard": [
+                [
+                    {"text": "🔗 Apply Online", "url": apply_url},
+                    {"text": "👥 Find Referrers", "url": referrer_search_url},
+                ]
+            ]
+        }
+
+        # Compact connection note for LinkedIn's 300-char "Add a note" limit
+        skills_short = ", ".join(matching_skills[:3]) if matching_skills else "backend systems"
+        connect_note = (
+            f"Hi, I'm an SDE at NAV Fund Services. I saw {company}'s {title} role and love your backend engineering work! "
+            f"Given my hands-on background in {skills_short}, would you be open to connecting for a quick referral? Thanks!"
+        )
+
         # Build the message
         score_emoji = self._score_emoji(match_score)
         skills_text = ", ".join(matching_skills[:8])
@@ -79,9 +102,10 @@ class TelegramNotifier:
             f"📍 {self._escape_md(location or 'Not specified')}\n\n"
             f"📊 *Match Analysis:*\n{self._escape_md(match_summary)}\n\n"
             f"🔧 *Key Skills:* {self._escape_md(skills_text)}\n\n"
-            f"🔗 [Apply Now]({apply_url})\n\n"
             f"{'─' * 30}\n\n"
-            f"📨 *Referral Pitch \\(copy\\-paste\\):*\n"
+            f"🤝 *LinkedIn Note \\(copy for 'Add a note'\\):*\n"
+            f"```\n{connect_note}\n```\n\n"
+            f"📨 *Full Referral Pitch \\(for Chat/Email\\):*\n"
             f"```\n{referral_message}\n```"
         )
 
@@ -96,6 +120,7 @@ class TelegramNotifier:
                             "text": message,
                             "parse_mode": "MarkdownV2",
                             "disable_web_page_preview": True,
+                            "reply_markup": reply_markup,
                         },
                     )
                     if text_response.status_code == 429:
@@ -113,6 +138,7 @@ class TelegramNotifier:
                                 "text": message,
                                 "parse_mode": "MarkdownV2",
                                 "disable_web_page_preview": True,
+                                "reply_markup": reply_markup,
                             },
                         )
 
@@ -126,9 +152,9 @@ class TelegramNotifier:
                         f"Location: {location or 'Not specified'}\n\n"
                         f"Match Analysis:\n{match_summary}\n\n"
                         f"Key Skills: {skills_text}\n\n"
-                        f"Apply: {apply_url}\n\n"
                         f"{'─' * 30}\n\n"
-                        f"Referral Pitch:\n{referral_message}"
+                        f"LinkedIn Note (for 'Add a note'):\n{connect_note}\n\n"
+                        f"Full Referral Pitch:\n{referral_message}"
                     )
                     text_response = await client.post(
                         f"{TELEGRAM_API.format(token=self.token)}/sendMessage",
@@ -136,6 +162,7 @@ class TelegramNotifier:
                             "chat_id": self.chat_id,
                             "text": plain_msg,
                             "disable_web_page_preview": True,
+                            "reply_markup": reply_markup,
                         },
                     )
                     if text_response.status_code == 429:
