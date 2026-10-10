@@ -121,29 +121,36 @@ async def _notify_job_alert(
 
         outreach_contact = None
         # Automated referral cold email outreach if enabled and score qualifies
-        if email_sender and email_sender.enabled and email_sender.auto_send:
+        if email_sender and email_sender.enabled and email_sender.auto_send and email_sender.is_configured:
             if match_score >= email_sender.min_score:
-                try:
-                    candidates = await find_referrers(company_name=db_job.company_name)
-                    if candidates:
-                        target = candidates[0]
-                        sent_email = await email_sender.send_referral_email(
-                            job_id=db_job.id,
-                            company=db_job.company_name,
-                            job_title=db_job.title,
-                            apply_url=db_job.apply_url,
-                            recipient_email=target["email"],
-                            recipient_name=target.get("name"),
-                            recipient_title=target.get("title"),
-                        )
-                        if sent_email:
-                            outreach_contact = target["email"]
-                            logger.info(
-                                f"  📧 Automated referral email sent to {target['email']} "
-                                f"({target.get('title', 'Engineer')}) for {db_job.company_name}"
+                sent_today = await email_sender.get_daily_sent_count()
+                if sent_today >= email_sender.daily_limit:
+                    logger.info(
+                        f"  [Outreach Throttle] Daily outreach limit reached ({sent_today}/{email_sender.daily_limit}). "
+                        f"Skipping contact search & email for {db_job.company_name} to preserve Hunter credits."
+                    )
+                else:
+                    try:
+                        candidates = await find_referrers(company_name=db_job.company_name)
+                        if candidates:
+                            target = candidates[0]
+                            sent_email = await email_sender.send_referral_email(
+                                job_id=db_job.id,
+                                company=db_job.company_name,
+                                job_title=db_job.title,
+                                apply_url=db_job.apply_url,
+                                recipient_email=target["email"],
+                                recipient_name=target.get("name"),
+                                recipient_title=target.get("title"),
                             )
-                except Exception as out_err:
-                    logger.error(f"  Outreach error for {db_job.company_name}: {out_err}")
+                            if sent_email:
+                                outreach_contact = target["email"]
+                                logger.info(
+                                    f"  📧 Automated referral email sent to {target['email']} "
+                                    f"({target.get('title', 'Engineer')}) for {db_job.company_name}"
+                                )
+                    except Exception as out_err:
+                        logger.error(f"  Outreach error for {db_job.company_name}: {out_err}")
 
         async with AsyncSessionLocal() as session:
             from sqlalchemy import update
