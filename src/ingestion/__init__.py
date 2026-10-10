@@ -7,6 +7,7 @@ from src.ingestion.ashby import AshbySource
 from src.ingestion.smartrecruiters import SmartRecruitersSource
 from src.ingestion.jobspy_source import JobSpySource
 from src.ingestion.instahyre_source import InstahyreSource
+from src.ingestion.amazon import AmazonSource
 
 __all__ = [
     "JobSource",
@@ -17,4 +18,5 @@ __all__ = [
     "SmartRecruitersSource",
     "JobSpySource",
     "InstahyreSource",
+    "AmazonSource",
 ]

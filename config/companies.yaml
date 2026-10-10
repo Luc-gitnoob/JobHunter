@@ -155,51 +155,34 @@ companies:
     priority: 1
     geo_filter: ["India", "Bangalore", "Remote"]
 
+  - name: Swiggy
+    ats_platform: smartrecruiters
+    ats_slug: swiggy
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Bengaluru", "Remote"]
+
+  - name: Razorpay
+    ats_platform: greenhouse
+    ats_slug: razorpaysoftwareprivatelimited
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Remote"]
+
+  - name: Amazon
+    ats_platform: amazon
+    ats_slug: amazon
+    priority: 1
+    geo_filter: ["India", "Bangalore", "Bengaluru", "Hyderabad", "Pune", "Remote"]
+
 # ============================================================
-# python-jobspy Fallback Searches
-# For companies not on supported ATS platforms, or for
-# broad keyword-based discovery on LinkedIn/Indeed.
+# python-jobspy Targeted Searches
+# For top tech companies without public Greenhouse/Lever/Ashby/SmartRecruiters APIs
+# (e.g., Flipkart, PhonePe, Zerodha, Atlassian, Postman)
 # ============================================================
 jobspy_searches:
-  - search_term: "Backend Engineer"
+  - search_term: "Flipkart Software Engineer"
     location: "India"
-    sites: ["linkedin", "indeed"]
-    results_wanted: 30
-
-  - search_term: "Software Engineer Golang"
-    location: "India"
-    sites: ["linkedin", "indeed"]
-    results_wanted: 30
-
-  - search_term: "SDE 1 Backend"
-    location: "India"
-    sites: ["linkedin"]
-    results_wanted: 25
-
-  - search_term: "Junior Backend Engineer"
-    location: "India"
-    sites: ["linkedin"]
-    results_wanted: 25
-
-  - search_term: "Golang Developer"
-    location: "India"
-    sites: ["linkedin", "indeed"]
-    results_wanted: 25
-
-  - search_term: "Software Development Engineer 1"
-    location: "India"
-    sites: ["linkedin"]
-    results_wanted: 25
-
-  - search_term: "Software Engineer distributed systems"
-    location: "Bangalore"
     sites: ["linkedin"]
     results_wanted: 20
-
-  - search_term: "Swiggy Software Engineer"
-    location: "India"
-    sites: ["linkedin"]
-    results_wanted: 15
 
   - search_term: "PhonePe Software Engineer"
     location: "India"
@@ -216,13 +199,34 @@ jobspy_searches:
     sites: ["linkedin"]
     results_wanted: 15
 
-  - search_term: "Razorpay Backend Engineer"
+  - search_term: "Zerodha Software Engineer"
+    location: "Bangalore"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Atlassian Software Engineer"
     location: "India"
     sites: ["linkedin"]
     results_wanted: 15
 
-  - search_term: "Zerodha Software Engineer"
-    location: "Bangalore"
+  - search_term: "Uber Software Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  # Selective fallback searches for high-scale backend roles
+  - search_term: "SDE 1 Backend"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Junior Backend Engineer"
+    location: "India"
+    sites: ["linkedin"]
+    results_wanted: 15
+
+  - search_term: "Software Development Engineer 1"
+    location: "India"
     sites: ["linkedin"]
     results_wanted: 15
 

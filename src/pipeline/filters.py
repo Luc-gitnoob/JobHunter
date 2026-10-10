@@ -69,6 +69,10 @@ class PreFilter:
         self.candidate_yoe = calculate_yoe(career_start)
         self.max_yoe = get_max_allowed_yoe(career_start)
 
+        self.company_exclude = [
+            c.lower() for c in config.get("company_exclude", [])
+        ]
+
         # Allow explicit numeric override from config if provided
         configured_max = config.get("max_yoe_mentioned")
         if isinstance(configured_max, int) and configured_max > 0:
@@ -119,7 +123,34 @@ class PreFilter:
             if not is_geo_match:
                 return False, f"Location '{job.location}' not in geo filter: {geo_filter}"
 
-        # 5. YOE check — strict hard requirement (< max_yoe)
+        # 5. Company / Staffing Agency filter (for uncurated scraper jobs)
+        is_curated_ats = getattr(job, "source", "") in ["greenhouse", "lever", "ashby", "smartrecruiters", "amazon"]
+        if not is_curated_ats:
+            company_lower = (job.company_name or "").lower()
+            for kw in self.company_exclude:
+                pat = r"(?:^|[\s\-_,.:/()|])" + re.escape(kw) + r"(?:$|[\s\-_,.:/()|])"
+                if re.search(pat, company_lower):
+                    return False, f"Company '{job.company_name}' matches excluded agency keyword: '{kw}'"
+
+            # Check description for third-party staffing indicators
+            if job.description:
+                desc_lower = job.description.lower()
+                agency_phrases = [
+                    "hiring for our client",
+                    "hiring for client",
+                    "our client is looking for",
+                    "client of ",
+                    "recruiting on behalf of",
+                    "staffing partner",
+                    "third party payroll",
+                    "contract to hire",
+                    "c2h role",
+                ]
+                for phrase in agency_phrases:
+                    if phrase in desc_lower:
+                        return False, f"Staffing agency indicator detected in JD: '{phrase}'"
+
+        # 6. YOE check — strict hard requirement (< max_yoe)
         if self.max_yoe and job.description:
             is_disqualified, reason = self.check_disqualifying_yoe(job.description, self.max_yoe)
             if is_disqualified:

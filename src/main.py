@@ -38,6 +38,7 @@ from src.ingestion.ashby import AshbySource
 from src.ingestion.smartrecruiters import SmartRecruitersSource
 from src.ingestion.jobspy_source import JobSpySource
 from src.ingestion.instahyre_source import InstahyreSource
+from src.ingestion.amazon import AmazonSource
 from src.pipeline.normalizer import normalize_job
 from src.pipeline.filters import PreFilter
 from src.pipeline.dedup import DedupEngine
@@ -86,6 +87,7 @@ SOURCES = {
     "lever": LeverSource,
     "ashby": AshbySource,
     "smartrecruiters": SmartRecruitersSource,
+    "amazon": AmazonSource,
 }
 
 
@@ -321,7 +323,12 @@ async def run_poll_cycle(all_config: dict):
     # --- Phase 4a: Dispatch unnotified high-match jobs in database ---
     # Instantly alerts on any high matches found in earlier runs that weren't yet notified
     async with AsyncSessionLocal() as session:
-        from sqlalchemy import select
+        from sqlalchemy import select, case
+        source_priority = case(
+            (Job.source.in_(["greenhouse", "ashby", "lever", "smartrecruiters", "amazon"]), 1),
+            (Job.source == "instahyre", 2),
+            else_=3,
+        )
         stmt = (
             select(Job)
             .where(
@@ -329,7 +336,7 @@ async def run_poll_cycle(all_config: dict):
                 Job.match_score >= min_score,
                 Job.notified == False,
             )
-            .order_by(Job.match_score.desc())
+            .order_by(source_priority.asc(), Job.match_score.desc())
         )
         res = await session.execute(stmt)
         unnotified_jobs = res.scalars().all()
@@ -379,15 +386,21 @@ async def run_poll_cycle(all_config: dict):
             await asyncio.sleep(2)
 
     # --- Phase 4b: Score pending unscored jobs ---
+    # Prioritizes Tier-1 ATS direct company boards over broad scrapers
     async with AsyncSessionLocal() as session:
-        from sqlalchemy import select
+        from sqlalchemy import select, case
+        source_priority = case(
+            (Job.source.in_(["greenhouse", "ashby", "lever", "smartrecruiters", "amazon"]), 1),
+            (Job.source == "instahyre", 2),
+            else_=3,
+        )
         stmt = (
             select(Job)
             .where(
                 Job.is_filtered_out == False,
                 Job.match_score.is_(None),
             )
-            .order_by(Job.id.desc())
+            .order_by(source_priority.asc(), Job.id.desc())
         )
         res = await session.execute(stmt)
         unscored_jobs = res.scalars().all()
