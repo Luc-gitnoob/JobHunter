@@ -216,3 +216,15 @@ telegram:
   # Message format: rich markdown with inline buttons
   include_referral_pitch: true
   include_match_analysis: true
+
+# Automated referral cold email outreach
+outreach:
+  enabled: true
+  auto_send: true
+  daily_limit: 5               # Maximum cold emails per 24 hours to preserve inbox reputation
+  min_score: 90                # Minimum match score required to trigger automated email outreach
+  resume_path: "data/resume.pdf"
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  sender_name: "Salil Vaidya"
+  sender_email: "salilvaidya003@gmail.com"

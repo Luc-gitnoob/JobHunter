@@ -44,6 +44,7 @@ from src.pipeline.filters import PreFilter
 from src.pipeline.dedup import DedupEngine
 from src.pipeline.scorer import JobScorer
 from src.notifications.telegram import TelegramNotifier, generate_referral_message
+from src.outreach import find_referrers, EmailSender
 
 # ===================== LOGGING =====================
 logging.basicConfig(
@@ -94,9 +95,11 @@ async def _notify_job_alert(
     score_result: dict,
     notifier: TelegramNotifier,
     profile: dict,
+    email_sender: Optional[EmailSender] = None,
 ) -> bool:
-    """Deliver real-time Telegram alert and referral message for a high-matching job."""
+    """Deliver real-time Telegram alert, referral pitch, and optional automated email outreach."""
     try:
+        match_score = int(score_result.get("match_score", db_job.match_score or 0))
         referral_msg = generate_referral_message(
             candidate_name=profile["name"],
             company=db_job.company_name,
@@ -110,11 +113,37 @@ async def _notify_job_alert(
             title=db_job.title,
             location=db_job.location or "",
             apply_url=db_job.apply_url,
-            match_score=int(score_result.get("match_score", db_job.match_score or 0)),
+            match_score=match_score,
             match_summary=score_result.get("summary", ""),
             matching_skills=score_result.get("matching_skills", []),
             referral_message=referral_msg,
         )
+
+        outreach_contact = None
+        # Automated referral cold email outreach if enabled and score qualifies
+        if email_sender and email_sender.enabled and email_sender.auto_send:
+            if match_score >= email_sender.min_score:
+                try:
+                    candidates = await find_referrers(company_name=db_job.company_name)
+                    if candidates:
+                        target = candidates[0]
+                        sent_email = await email_sender.send_referral_email(
+                            job_id=db_job.id,
+                            company=db_job.company_name,
+                            job_title=db_job.title,
+                            apply_url=db_job.apply_url,
+                            recipient_email=target["email"],
+                            recipient_name=target.get("name"),
+                            recipient_title=target.get("title"),
+                        )
+                        if sent_email:
+                            outreach_contact = target["email"]
+                            logger.info(
+                                f"  📧 Automated referral email sent to {target['email']} "
+                                f"({target.get('title', 'Engineer')}) for {db_job.company_name}"
+                            )
+                except Exception as out_err:
+                    logger.error(f"  Outreach error for {db_job.company_name}: {out_err}")
 
         async with AsyncSessionLocal() as session:
             from sqlalchemy import update
@@ -122,6 +151,8 @@ async def _notify_job_alert(
                 "referral_message": referral_msg,
                 "status": "notified" if sent else "scored",
             }
+            if outreach_contact:
+                update_values["referral_contact"] = outreach_contact
             if sent:
                 update_values["notified"] = True
                 update_values["notified_at"] = datetime.now(timezone.utc)
@@ -132,7 +163,7 @@ async def _notify_job_alert(
             await session.commit()
 
         if sent:
-            logger.info(f"  📬 Telegram alert delivered for {db_job.company_name} — {db_job.title}")
+            logger.info(f"  📬 Telegram alert delivered for {db_job.company_name} - {db_job.title}")
         return sent
 
     except Exception as e:
@@ -169,6 +200,7 @@ async def run_poll_cycle(all_config: dict):
     )
     scorer = JobScorer(config.get("scoring", {}))
     notifier = TelegramNotifier()
+    email_sender = EmailSender(config.get("outreach", {}))
 
     min_score = config.get("scoring", {}).get("min_score", 70)
     delay = config.get("scheduler", {}).get("request_delay_seconds", 2)
@@ -396,6 +428,7 @@ async def run_poll_cycle(all_config: dict):
                 score_result=score_data,
                 notifier=notifier,
                 profile=profile,
+                email_sender=email_sender,
             )
             await asyncio.sleep(2)
 
@@ -481,7 +514,7 @@ async def run_poll_cycle(all_config: dict):
                     high_matches_dispatched += 1
                     logger.info(
                         f"  ⭐ [PASS {score}/100 >= {min_score}] "
-                        f"{db_job.company_name} — {db_job.title}\n"
+                        f"{db_job.company_name} - {db_job.title}\n"
                         f"     Match Analysis: {summary}"
                     )
                     await _notify_job_alert(
@@ -489,12 +522,13 @@ async def run_poll_cycle(all_config: dict):
                         score_result=score_result,
                         notifier=notifier,
                         profile=profile,
+                        email_sender=email_sender,
                     )
                 else:
                     status_label = "DISQUALIFIED" if score < 40 else "BELOW THRESHOLD"
                     logger.info(
                         f"  ⚪ [{status_label} {score}/100 < {min_score}] "
-                        f"{db_job.company_name} — {db_job.title}\n"
+                        f"{db_job.company_name} - {db_job.title}\n"
                         f"     Match Analysis: {summary}"
                     )
 

@@ -9,6 +9,7 @@ from sqlalchemy import (
     Text,
     DateTime,
     Boolean,
+    ForeignKey,
     UniqueConstraint,
     Index,
 )
@@ -98,4 +99,29 @@ class PollLog(Base):
     status = Column(String(50), default="running")  # running, success, error
 
     def __repr__(self):
-        return f"<PollLog({self.id}: {self.source}/{self.company_name} — {self.status})>"
+        return f"<PollLog({self.id}: {self.source}/{self.company_name} - {self.status})>"
+
+
+class OutreachLog(Base):
+    """Tracks cold emails sent for referral outreach."""
+    __tablename__ = "outreach_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
+    company_name = Column(String(255), nullable=False)
+    recipient_email = Column(String(255), nullable=False)
+    recipient_name = Column(String(255), nullable=True)
+    recipient_title = Column(String(255), nullable=True)
+    subject = Column(String(500), nullable=False)
+    status = Column(String(50), default="sent")  # sent, failed, skipped
+    error = Column(Text, nullable=True)
+    sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("ix_outreach_recipient", "recipient_email"),
+        Index("ix_outreach_company", "company_name"),
+        Index("ix_outreach_sent_at", "sent_at"),
+    )
+
+    def __repr__(self):
+        return f"<OutreachLog({self.id}: {self.recipient_email} at {self.company_name} - {self.status})>"
