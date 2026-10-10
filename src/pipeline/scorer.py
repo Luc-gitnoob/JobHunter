@@ -181,17 +181,17 @@ class JobScorer:
             result = json.loads(response.text)
 
             # Validate the response has required fields
-            required_keys = [
-                "match_score", "matching_skills", "skill_gaps",
-                "resume_emphasis", "summary"
-            ]
+            required_keys = ["match_score", "matching_skills", "summary"]
             for key in required_keys:
                 if key not in result:
                     logger.warning(f"LLM response missing key: {key}")
                     return None
 
+            result.setdefault("skill_gaps", [])
+            result.setdefault("resume_emphasis", [])
+
             # Ensure score is an integer
-            result["match_score"] = int(result["match_score"])
+            result["match_score"] = int(float(result["match_score"]))
 
             # Programmatic safety valve: if JD mentions >= max_allowed_yoe, clamp score below threshold
             if result["match_score"] >= self.min_score:

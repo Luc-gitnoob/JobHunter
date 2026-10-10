@@ -30,9 +30,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/jobhunter.db
-          key: jobhunter-v5-db-${{ github.run_id }}
+          key: jobhunter-v6-db-${{ github.run_id }}
           restore-keys: |
-            jobhunter-v5-db-
+            jobhunter-v6-db-
 
       - name: Ensure Directories Exist
         run: |
@@ -51,7 +51,7 @@ jobs:
         if: always()
         with:
           path: data/jobhunter.db
-          key: jobhunter-v5-db-${{ github.run_id }}
+          key: jobhunter-v6-db-${{ github.run_id }}
 
       - name: Upload Database & Log Artifacts
         uses: actions/upload-artifact@v4
