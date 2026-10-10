@@ -113,7 +113,7 @@ class JobScorer:
         Args:
             config: The 'scoring' section from config.yaml
         """
-        self.model_name = config.get("model", "gemini-2.0-flash")
+        self.model_name = config.get("model", "gemini-3.6-flash")
         self.temperature = config.get("temperature", 0.3)
         self.min_score = config.get("min_score", 70)
         self._profile = _load_profile()
