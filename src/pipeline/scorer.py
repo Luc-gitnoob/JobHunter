@@ -213,23 +213,31 @@ class JobScorer:
                             f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
                         )
 
-                    # Safety clamp: if summary or title indicates SDE-2, PhD, future batch, or non-SWE compliance
+                    # Safety clamp: if summary or title indicates Staff, SDE-2, PhD, future batch, or non-SWE compliance
                     summary_lower = result.get("summary", "").lower()
                     title_lower = title.lower()
+                    is_staff_disqualified = "staff" in title_lower and "member of technical staff" not in title_lower
                     disqualify_indicators = [
                         "sde ii", "sde 2", "sde-ii", "sde-2", "swe ii", "swe 2",
                         "phd", "ph.d", "doctorate",
                         "risk management", "aml", "sanctions", "compliance analyst",
                         "2027 graduate", "2027 campus", "2028 graduate", "2028 campus"
                     ]
-                    for ind in disqualify_indicators:
-                        if ind in summary_lower or ind in title_lower:
-                            logger.warning(
-                                f"  [Scorer Safety] Clamping score for {company} — {title}: "
-                                f"Detected disqualified archetype ('{ind}')."
-                            )
-                            result["match_score"] = 30
-                            break
+                    if is_staff_disqualified:
+                        logger.warning(
+                            f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                            f"Detected Staff seniority role."
+                        )
+                        result["match_score"] = 30
+                    else:
+                        for ind in disqualify_indicators:
+                            if ind in summary_lower or ind in title_lower:
+                                logger.warning(
+                                    f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                                    f"Detected disqualified archetype ('{ind}')."
+                                )
+                                result["match_score"] = 30
+                                break
 
                     # Safety clamp: if summary indicates unverified compensation or traditional IT shop
                     unverified_comp_indicators = [

@@ -51,6 +51,7 @@ filters:
   # Jobs with these in the title are immediately dropped
   title_exclude:
     - "senior"
+    - "staff"
     - "staff engineer"
     - "staff software engineer"
     - "staff developer"
