@@ -41,7 +41,7 @@ Evaluate how well this candidate matches this job posting in the following stric
 
 1. [PRIORITY 1 - HIGHEST] Experience Level Match (CRITICAL HARD REQUIREMENT):
    The candidate started their career in Jan 2025 and has only {current_yoe:.1f} years of professional experience. Target roles requiring strictly <{max_allowed_yoe} YOE.
-   If the job description requires or expects >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring >={max_allowed_yoe} YOE score 70 or above. Only roles open to 0-1 YOE, fresh graduates, junior, associate, or early-career engineers should pass.
+   If the job description strictly requires minimum >={max_allowed_yoe} years of experience (e.g. 2+ YOE, 2-4 years, 3+ YOE, mid-level, experienced, or senior), you MUST reject this role by giving match_score < 40. Under no circumstances should a role requiring minimum >={max_allowed_yoe} YOE score 70 or above. Roles specifying junior brackets like 0-2 years or 1-3 years where the minimum required experience is <{max_allowed_yoe} YOE, fresh graduates, junior, associate, or early-career engineers should pass.
 
 2. [PRIORITY 2 - HIGH] Company Pedigree & Compensation Benchmark (CRITICAL TIER REQUIREMENT):
    The candidate is an SDE at NAV Fund Services (high-scale fintech/distributed systems) targeting high-tier product engineering roles paying >= 18 LPA INR (or $25k+ USD for remote roles).
