@@ -509,8 +509,8 @@ async def run_poll_cycle(all_config: dict):
         except Exception as e:
             logger.error(f"  Scoring error for {db_job.company_name}/{db_job.title}: {e}")
 
-        # Rate limit Gemini calls (safe for Free Tier RPM)
-        await asyncio.sleep(4)
+        # Rate limit Gemini calls (13s spacing safely conforms to 5 RPM free tier limit)
+        await asyncio.sleep(13)
 
     # Score distribution & calibration breakdown
     if scored_jobs_stats:

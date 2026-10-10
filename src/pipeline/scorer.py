@@ -170,82 +170,99 @@ class JobScorer:
             max_allowed_yoe=self.max_allowed_yoe,
         )
 
-        try:
-            model = self._get_model()
-            response = await asyncio.to_thread(
-                model.generate_content,
-                prompt,
-                generation_config={
-                    "temperature": self.temperature,
-                    "response_mime_type": "application/json",
-                },
-            )
+        for attempt in range(3):
+            try:
+                model = self._get_model()
+                response = await asyncio.to_thread(
+                    model.generate_content,
+                    prompt,
+                    generation_config={
+                        "temperature": self.temperature,
+                        "response_mime_type": "application/json",
+                    },
+                )
 
-            # Parse the JSON response
-            result = json.loads(response.text)
+                # Parse the JSON response
+                result = json.loads(response.text)
 
-            # Validate the response has required fields
-            required_keys = ["match_score", "matching_skills", "summary"]
-            for key in required_keys:
-                if key not in result:
-                    logger.warning(f"LLM response missing key: {key}")
-                    return None
+                # Validate the response has required fields
+                required_keys = ["match_score", "matching_skills", "summary"]
+                for key in required_keys:
+                    if key not in result:
+                        logger.warning(f"LLM response missing key: {key}")
+                        return None
 
-            result.setdefault("skill_gaps", [])
-            result.setdefault("resume_emphasis", [])
+                result.setdefault("skill_gaps", [])
+                result.setdefault("resume_emphasis", [])
 
-            # Ensure score is an integer
-            result["match_score"] = int(float(result["match_score"]))
+                # Ensure score is an integer
+                result["match_score"] = int(float(result["match_score"]))
 
-            # Programmatic safety valve: if JD mentions >= max_allowed_yoe, clamp score below threshold
-            if result["match_score"] >= self.min_score:
-                from src.pipeline.filters import PreFilter
-                is_disqualified, reason = PreFilter(config={}).check_disqualifying_yoe(description, self.max_allowed_yoe)
-                if is_disqualified:
-                    logger.warning(
-                        f"  [Scorer Safety] Clamping score for {company} — {title}: "
-                        f"{reason} (hard limit <{self.max_allowed_yoe} YOE)."
-                    )
-                    result["match_score"] = 30
-                    result["summary"] = (
-                        f"Automatically rejected: {reason}. "
-                        f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
-                    )
-
-                # Safety clamp: if summary or title indicates SDE-2, PhD, future batch, or non-SWE compliance
-                summary_lower = result.get("summary", "").lower()
-                title_lower = title.lower()
-                disqualify_indicators = [
-                    "sde ii", "sde 2", "sde-ii", "sde-2", "swe ii", "swe 2",
-                    "phd", "ph.d", "doctorate",
-                    "risk management", "aml", "sanctions", "compliance analyst",
-                    "2027 graduate", "2027 campus", "2028 graduate", "2028 campus"
-                ]
-                for ind in disqualify_indicators:
-                    if ind in summary_lower or ind in title_lower:
+                # Programmatic safety valve: if JD mentions >= max_allowed_yoe, clamp score below threshold
+                if result["match_score"] >= self.min_score:
+                    from src.pipeline.filters import PreFilter
+                    is_disqualified, reason = PreFilter(config={}).check_disqualifying_yoe(description, self.max_allowed_yoe)
+                    if is_disqualified:
                         logger.warning(
                             f"  [Scorer Safety] Clamping score for {company} — {title}: "
-                            f"Detected disqualified archetype ('{ind}')."
+                            f"{reason} (hard limit <{self.max_allowed_yoe} YOE)."
                         )
                         result["match_score"] = 30
-                        break
+                        result["summary"] = (
+                            f"Automatically rejected: {reason}. "
+                            f"Candidate has {self.candidate_yoe:.1f} YOE (hard limit <{self.max_allowed_yoe} YOE)."
+                        )
 
-            logger.info(
-                f"[Scorer] {company} — {title}: score={result['match_score']}/100 | {result.get('summary', '')}"
-            )
-            return result
+                    # Safety clamp: if summary or title indicates SDE-2, PhD, future batch, or non-SWE compliance
+                    summary_lower = result.get("summary", "").lower()
+                    title_lower = title.lower()
+                    disqualify_indicators = [
+                        "sde ii", "sde 2", "sde-ii", "sde-2", "swe ii", "swe 2",
+                        "phd", "ph.d", "doctorate",
+                        "risk management", "aml", "sanctions", "compliance analyst",
+                        "2027 graduate", "2027 campus", "2028 graduate", "2028 campus"
+                    ]
+                    for ind in disqualify_indicators:
+                        if ind in summary_lower or ind in title_lower:
+                            logger.warning(
+                                f"  [Scorer Safety] Clamping score for {company} — {title}: "
+                                f"Detected disqualified archetype ('{ind}')."
+                            )
+                            result["match_score"] = 30
+                            break
 
-        except json.JSONDecodeError as e:
-            logger.error(f"[Scorer] Failed to parse LLM response as JSON: {e}")
-            return None
-        except Exception as e:
-            err_msg = str(e)
-            if "429" in err_msg or "quota" in err_msg.lower() or "ResourceExhausted" in err_msg:
-                self.quota_exhausted = True
-                logger.error(
-                    f"[Scorer] Quota exceeded for model '{self.model_name}': {e}. "
-                    f"Halting scoring to prevent redundant API calls."
+                logger.info(
+                    f"[Scorer] {company} — {title}: score={result['match_score']}/100 | {result.get('summary', '')}"
                 )
-            else:
-                logger.error(f"[Scorer] Error scoring {company}/{title}: {e}")
-            return None
+                return result
+
+            except json.JSONDecodeError as e:
+                logger.error(f"[Scorer] Failed to parse LLM response as JSON: {e}")
+                return None
+            except Exception as e:
+                err_msg = str(e)
+                import re
+                is_rate_limit = "429" in err_msg or "resourceexhausted" in err_msg.lower() or "quota exceeded" in err_msg.lower()
+                is_daily = "perday" in err_msg.lower() or "daily" in err_msg.lower()
+
+                if is_rate_limit and not is_daily and attempt < 2:
+                    wait_time = 18.0 * (attempt + 1)
+                    match_delay = re.search(r"retry\s+in\s+([\d.]+)\s*s", err_msg, re.IGNORECASE)
+                    if match_delay:
+                        wait_time = max(wait_time, float(match_delay.group(1)) + 2.0)
+                    logger.warning(
+                        f"[Scorer] Hit RPM limit (attempt {attempt+1}/3). "
+                        f"Backing off for {wait_time:.1f}s before retry..."
+                    )
+                    await asyncio.sleep(wait_time)
+                    continue
+
+                if is_rate_limit:
+                    if is_daily:
+                        self.quota_exhausted = True
+                        logger.error(f"[Scorer] Daily quota exceeded for model '{self.model_name}': {e}. Halting scoring phase.")
+                    else:
+                        logger.error(f"[Scorer] Rate limit exceeded after retries for {company}/{title}: {e}")
+                else:
+                    logger.error(f"[Scorer] Error scoring {company}/{title}: {e}")
+                return None
