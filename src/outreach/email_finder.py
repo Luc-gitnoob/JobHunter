@@ -55,16 +55,55 @@ async def find_referrers(company_name: str, domain: Optional[str] = None) -> lis
     return []
 
 
+KNOWN_DOMAINS = {
+    "rubrik": "rubrik.com",
+    "stripe": "stripe.com",
+    "databricks": "databricks.com",
+    "cloudflare": "cloudflare.com",
+    "datadog": "datadoghq.com",
+    "rippling": "rippling.com",
+    "graviton research capital": "gravitonresearch.com",
+    "tower research capital": "tower-research.com",
+    "alphagrep securities": "alphagrep.com",
+    "nutanix": "nutanix.com",
+    "cohesity": "cohesity.com",
+    "salesforce": "salesforce.com",
+    "atlassian": "atlassian.com",
+    "uber": "uber.com",
+    "google": "google.com",
+    "microsoft": "microsoft.com",
+    "amazon": "amazon.com",
+    "arcesium": "arcesium.com",
+    "goldman sachs": "gs.com",
+    "morgan stanley": "morganstanley.com",
+    "blackrock": "blackrock.com",
+}
+
+
+def _resolve_domain(company_name: str, domain: Optional[str] = None) -> Optional[str]:
+    """Resolve domain from given value, known company lookup, or single-word fallback."""
+    if domain:
+        return domain
+    clean = company_name.lower().strip()
+    if clean in KNOWN_DOMAINS:
+        return KNOWN_DOMAINS[clean]
+    words = clean.split()
+    if len(words) == 1 and words[0].isalnum():
+        return f"{words[0]}.com"
+    return None
+
+
 async def _search_hunter(company_name: str, domain: Optional[str], api_key: str) -> list[dict]:
     """Query Hunter.io Domain Search API for engineering contacts."""
+    target_domain = _resolve_domain(company_name, domain)
     url = "https://api.hunter.io/v2/domain-search"
     params = {
         "api_key": api_key,
         "department": "engineering",
         "limit": 5,
     }
-    if domain:
-        params["domain"] = domain
+    if target_domain:
+        params["domain"] = target_domain
     else:
         params["company"] = company_name
 
@@ -107,6 +146,7 @@ async def _search_hunter(company_name: str, domain: Optional[str], api_key: str)
 
 async def _search_apollo(company_name: str, domain: Optional[str], api_key: str) -> list[dict]:
     """Query Apollo.io Mixed People Search API for engineering contacts."""
+    target_domain = _resolve_domain(company_name, domain)
     url = "https://api.apollo.io/v1/mixed_people/search"
     headers = {
         "Content-Type": "application/json",
@@ -114,7 +154,6 @@ async def _search_apollo(company_name: str, domain: Optional[str], api_key: str)
         "X-Api-Key": api_key,
     }
     payload = {
-        "api_key": api_key,
         "organization_names": [company_name],
         "person_titles": [
             "Software Engineer",
@@ -126,8 +165,8 @@ async def _search_apollo(company_name: str, domain: Optional[str], api_key: str)
         "page": 1,
         "per_page": 5,
     }
-    if domain:
-        payload["q_organization_domains"] = [domain]
+    if target_domain:
+        payload["q_organization_domains"] = [target_domain]
 
     async with httpx.AsyncClient(timeout=15.0) as client:
         resp = await client.post(url, headers=headers, json=payload)
